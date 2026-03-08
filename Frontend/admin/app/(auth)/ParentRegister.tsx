@@ -16,7 +16,7 @@ import {
 } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { collection, getDocs, doc, setDoc } from "firebase/firestore"; 
+//import { collection, getDocs, doc, setDoc } from "firebase/firestore"; 
 // Firebase Firestore functions:
 // collection -> reference a Firestore collection
 // getDocs -> fetch all documents from a collection
@@ -27,7 +27,7 @@ import { db, auth } from "../../firebaseConfig";
 // db -> Firestore database instance
 // auth -> Firebase authentication instance
 
-import { Picker } from "@react-native-picker/picker"; 
+//import { Picker } from "@react-native-picker/picker"; 
 // Used to show a dropdown list for selecting drivers
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
@@ -65,19 +65,19 @@ export default function ParentRegisterScreen() {
       try {
 
         // Fetch all documents from "drivers" collection
-        const snapshot = await getDocs(collection(db, "drivers"));
+        //const snapshot = await getDocs(collection(db, "drivers"));
 
         const driverList: any[] = [];
 
         // Loop through each Firestore document
-        snapshot.forEach((docItem) => {
+        {/* snapshot.forEach((docItem) => {
 
           // Add driver data to array
           driverList.push({
             id: docItem.id, // Firestore document ID
             ...docItem.data(), // driver data fields
           });
-        });
+        });*/}
         
         // Save driver list into state so UI can display them
         setDrivers(driverList);
@@ -131,7 +131,7 @@ export default function ParentRegisterScreen() {
       Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
-
+{/* 
     try {
       // Register user in Firebase Authentication
       // register() likely calls createUserWithEmailAndPassword internally
@@ -177,7 +177,7 @@ export default function ParentRegisterScreen() {
         error.message || "Something went wrong"
       );
     }
-  };
+  };*/}
   
   return (
     <SafeAreaView style={styles.container}>
@@ -215,7 +215,7 @@ export default function ParentRegisterScreen() {
 
             {/* Driver selection dropdown */}
 
-            
+           {/* 
             <View style={{ marginBottom: 14 }}>
               <Text style={styles.label}>Select Driver</Text>
 
@@ -234,7 +234,7 @@ export default function ParentRegisterScreen() {
                   ))}
                 </Picker>
               </View>
-            </View>
+            </View>*/}
             
             {/* Register button */}
             <TouchableOpacity
@@ -396,3 +396,5 @@ const styles = StyleSheet.create({
   },
 
 });
+
+}
