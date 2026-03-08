@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
-import { db } from "../../firebaseConfig";
+import { db } from "../../backend/firebaseConfig";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const DRIVER_ID = "van1";
