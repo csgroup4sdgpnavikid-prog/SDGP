@@ -1,7 +1,9 @@
-// Import the functions you need
-import { getAnalytics } from "firebase/analytics";
+// frontend/firebaseConfig.js
+// This file connects the mobile app to Firebase database
+// Separate from backend — same Firebase project, but used in the app
+
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore"; // ✅ ADD THIS
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDJOtHU6FY4WosW_exH1q-CN6JyU0OmXZI",
@@ -13,10 +15,5 @@ const firebaseConfig = {
   measurementId: "G-8MP3BEFT1C"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// ⚠️ Analytics only works in web browser (not React Native)
-const analytics = getAnalytics(app);
-
-export const db = getFirestore(app); // ✅ Now works
+export const db = getFirestore(app);
