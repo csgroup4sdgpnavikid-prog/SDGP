@@ -1,640 +1,297 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  DollarSign,
-  Calendar,
-  Search,
-  Square,
-  CheckSquare,
-} from "lucide-react-native";
+import { CheckSquare, Square, DollarSign, Search } from "lucide-react-native";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { db } from "../../firebaseConfig"; // adjust path if needed
 
-interface Payment {
-  id: number;
-  studentName: string;
-  parent: string;
+interface PaymentItem {
+  id: string;           // parent doc ID
+  childName: string;
+  parentName: string;
+  parentToken: string;
   amount: number;
-  dueDate: string;
-  paidDate: string | null;
-  status: "paid" | "pending" | "overdue";
-  method: string | null;
-  month: string;
   route: string;
+  childClass: string;
+  status: "paid" | "pending";
+  paidDate: string | null;
 }
 
-type FilterType = "all" | "paid" | "pending" | "overdue";
+type FilterType = "all" | "paid" | "pending";
 
 export default function Payment() {
   const insets = useSafeAreaInsets();
+  const [payments, setPayments] = useState<PaymentItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
-  const [searchQuery, setSearchQuery] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingPayment, setPendingPayment] = useState<Payment | null>(null);
+  const [pendingPayment, setPendingPayment] = useState<PaymentItem | null>(null);
+  const [isSending, setIsSending] = useState(false);
 
-  const [payments, setPayments] = useState<Payment[]>([
-    {
-      id: 1,
-      studentName: "Emma Johnson",
-      parent: "Sarah Johnson",
-      amount: 120.0,
-      dueDate: "2024-12-01",
-      paidDate: null,
-      status: "pending",
-      method: null,
-      month: "December 2024",
-      route: "Route 2",
-    },
-    {
-      id: 2,
-      studentName: "Lucas Brown",
-      parent: "Michael Brown",
-      amount: 120.0,
-      dueDate: "2024-12-01",
-      paidDate: null,
-      status: "pending",
-      method: null,
-      month: "December 2024",
-      route: "Route 1",
-    },
-    {
-      id: 3,
-      studentName: "Sophia Davis",
-      parent: "Jennifer Davis",
-      amount: 120.0,
-      dueDate: "2024-12-01",
-      paidDate: null,
-      status: "pending",
-      method: null,
-      month: "December 2024",
-      route: "Route 3",
-    },
-    {
-      id: 4,
-      studentName: "Mason Wilson",
-      parent: "David Wilson",
-      amount: 120.0,
-      dueDate: "2024-12-01",
-      paidDate: null,
-      status: "pending",
-      method: null,
-      month: "December 2024",
-      route: "Route 2",
-    },
-    {
-      id: 5,
-      studentName: "Olivia Miller",
-      parent: "Lisa Miller",
-      amount: 120.0,
-      dueDate: "2024-12-01",
-      paidDate: null,
-      status: "pending",
-      method: null,
-      month: "December 2024",
-      route: "Route 1",
-    },
-    {
-      id: 6,
-      studentName: "Noah Garcia",
-      parent: "Carlos Garcia",
-      amount: 120.0,
-      dueDate: "2024-12-01",
-      paidDate: null,
-      status: "pending",
-      method: null,
-      month: "December 2024",
-      route: "Route 3",
-    },
-    {
-      id: 7,
-      studentName: "Ava Martinez",
-      parent: "Maria Martinez",
-      amount: 120.0,
-      dueDate: "2024-12-01",
-      paidDate: null,
-      status: "pending",
-      method: null,
-      month: "December 2024",
-      route: "Route 2",
-    },
-  ]);
+  // ── Load children assigned to this driver from Firestore ─────────────
+  useEffect(() => {
+    loadPayments();
+  }, []);
 
-  const handleCheckboxPress = (payment: Payment) => {
-    console.log("Checkbox pressed for:", payment.studentName);
+  async function loadPayments() {
+    setLoading(true);
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
 
-    // If already paid, don't do anything
-    if (payment.status === "paid") {
+      if (!currentUser) {
+        console.warn("No logged-in driver found");
+        setLoading(false);
+        return;
+      }
+
+      const driverId = currentUser.uid;
+      console.log("Loading payments for driver:", driverId);
+
+      // Query all parents assigned to this driver
+      const q = query(collection(db, "parents"), where("assignedDriverId", "==", driverId));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        console.warn("No parents found for this driver");
+        setPayments([]);
+        setLoading(false);
+        return;
+      }
+
+      const items: PaymentItem[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          childName: data.childName || "Unknown Child",
+          parentName: data.name || "Unknown Parent",
+          parentToken: data.expoPushToken || "",
+          amount: 120.0, // fixed amount — update if you store this in Firestore
+          route: data.childClass || "",
+          childClass: data.childClass || "",
+          status: "pending",
+          paidDate: null,
+        };
+      });
+
+      console.log(`✅ Loaded ${items.length} children for this driver`);
+      setPayments(items);
+    } catch (error) {
+      console.error("Error loading payments:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Checkbox pressed ──────────────────────────────────────────────────
+  const handleCheckboxPress = (item: PaymentItem) => {
+    // If already paid, untick it (revert to pending)
+    if (item.status === "paid") {
+      setPayments((prev) =>
+        prev.map((p) =>
+          p.id === item.id
+            ? { ...p, status: "pending" as const, paidDate: null }
+            : p
+        )
+      );
       return;
     }
 
-    // Immediately update to paid for instant visual feedback
-    setPayments((prevPayments) =>
-      prevPayments.map((p) =>
-        p.id === payment.id
+    // Instantly show as paid
+    setPayments((prev) =>
+      prev.map((p) =>
+        p.id === item.id
           ? { ...p, status: "paid" as const, paidDate: new Date().toISOString() }
-          : p,
-      ),
+          : p
+      )
     );
 
-    // Store the payment and show confirmation modal
-    setPendingPayment(payment);
+    setPendingPayment(item);
     setShowConfirmation(true);
   };
 
-  const handleConfirm = () => {
-    console.log("Confirmed - keeping as paid");
-    setShowConfirmation(false);
-    setPendingPayment(null);
+  // ── Confirm: send push notification to parent ─────────────────────────
+  const handleConfirm = async () => {
+    if (!pendingPayment) return;
+    setIsSending(true);
+
+    try {
+      const token = pendingPayment.parentToken;
+
+      if (!token || !token.startsWith("ExponentPushToken")) {
+        console.warn(`⚠️ No valid token for parent: ${pendingPayment.parentName}`);
+      } else {
+        const message = {
+          to: token,
+          sound: "default",
+          title: "✅ Payment Received",
+          body: `Payment of $${pendingPayment.amount.toFixed(2)} for ${pendingPayment.childName} has been confirmed. Thank you!`,
+          priority: "high",
+          data: { type: "payment_confirmation" },
+        };
+
+        const res = await fetch("https://exp.host/--/api/v2/push/send", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Accept-Encoding": "gzip, deflate",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(message),
+        });
+
+        const result = await res.json();
+        console.log(`✅ Payment notification sent to ${pendingPayment.parentName}:`, JSON.stringify(result));
+      }
+    } catch (error) {
+      console.error("Failed to send payment notification:", error);
+    } finally {
+      setIsSending(false);
+      setShowConfirmation(false);
+      setPendingPayment(null);
+    }
   };
 
+  // ── Cancel: revert to pending ─────────────────────────────────────────
   const handleCancel = () => {
-    console.log("Cancelled - reverting to unpaid");
     if (pendingPayment) {
-      setPayments((prevPayments) =>
-        prevPayments.map((p) =>
+      setPayments((prev) =>
+        prev.map((p) =>
           p.id === pendingPayment.id
             ? { ...p, status: "pending" as const, paidDate: null }
-            : p,
-        ),
+            : p
+        )
       );
     }
     setShowConfirmation(false);
     setPendingPayment(null);
   };
 
-  const filteredPayments = payments.filter((payment) => {
-    const matchesFilter =
-      selectedFilter === "all" ||
-      (selectedFilter === "paid" && payment.status === "paid") ||
-      (selectedFilter === "pending" && payment.status === "pending") ||
-      (selectedFilter === "overdue" && payment.status === "overdue");
-
-    const matchesSearch = payment.studentName
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-
-    return matchesFilter && matchesSearch;
+  const filteredPayments = payments.filter((p) => {
+    if (selectedFilter === "paid") return p.status === "paid";
+    if (selectedFilter === "pending") return p.status === "pending";
+    return true;
   });
 
-  const getStatusColor = (status: Payment["status"]): string => {
-    switch (status) {
-      case "paid":
-        return "#10B981";
-      case "pending":
-        return "#F59E0B";
-      case "overdue":
-        return "#EF4444";
-      default:
-        return "#6B7280";
-    }
-  };
-
-  const getStatusIcon = (status: Payment["status"]) => {
-    switch (status) {
-      case "paid":
-        return <CheckCircle size={16} color="#10B981" />;
-      case "pending":
-        return <Clock size={16} color="#F59E0B" />;
-      case "overdue":
-        return <AlertCircle size={16} color="#EF4444" />;
-      default:
-        return <Clock size={16} color="#6B7280" />;
-    }
-  };
-
-  const getStatusText = (status: Payment["status"]): string => {
-    switch (status) {
-      case "paid":
-        return "Paid";
-      case "pending":
-        return "Pending";
-      case "overdue":
-        return "Overdue";
-      default:
-        return "Unknown";
-    }
-  };
-
-  const formatDate = (dateString: string | null): string => {
-    if (!dateString) return "Not paid";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
   const totalPaid = payments.filter((p) => p.status === "paid").length;
-  const totalAmount = payments.reduce(
-    (sum, p) => (p.status === "paid" ? sum + p.amount : sum),
-    0,
-  );
-  const pendingCount = payments.filter((p) => p.status === "pending").length;
-  const overdueCount = payments.filter((p) => p.status === "overdue").length;
+  const totalAmount = payments.reduce((sum, p) => (p.status === "paid" ? sum + p.amount : sum), 0);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
       <StatusBar style="dark" />
 
       {/* Header */}
-      <View
-        style={{
-          backgroundColor: "#fff",
-          paddingTop: insets.top + 20,
-          paddingHorizontal: 20,
-          paddingBottom: 16,
-          borderBottomWidth: 1,
-          borderBottomColor: "#E5E7EB",
-        }}
-      >
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>
-          Payments
-        </Text>
+      <View style={{ backgroundColor: "#fff", paddingTop: insets.top + 20, paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" }}>
+        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>Payments</Text>
         <Text style={{ fontSize: 16, color: "#6B7280", marginTop: 4 }}>
-          December 2024 • {totalPaid}/{payments.length} paid
+          {totalPaid}/{payments.length} paid
         </Text>
       </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
-      >
-        {/* Summary Cards */}
-        <View style={{ padding: 20 }}>
-          <View style={{ flexDirection: "row", marginBottom: 20 }}>
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "#fff",
-                padding: 16,
-                borderRadius: 12,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-                marginRight: 12,
-              }}
-            >
-              <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>
-                Total Paid This Month
-              </Text>
-              <Text
-                style={{
-                  fontSize: 24,
-                  fontWeight: "bold",
-                  color: "#111827",
-                }}
-              >
-                ${totalAmount.toFixed(0)}
-              </Text>
-            </View>
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "#fff",
-                padding: 16,
-                borderRadius: 12,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            >
-              <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>
-                Students Paid
-              </Text>
-              <Text
-                style={{
-                  fontSize: 24,
-                  fontWeight: "bold",
-                  color: "#111827",
-                }}
-              >
-                {totalPaid} / {payments.length}
-              </Text>
-            </View>
-          </View>
+      {/* Loading */}
+      {loading && (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#2563EB" />
+          <Text style={{ color: "#6B7280", marginTop: 12 }}>Loading payments...</Text>
+        </View>
+      )}
 
-          <View
-            style={{
-              backgroundColor: "#fff",
-              padding: 16,
-              borderRadius: 12,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 2,
-              elevation: 1,
-              marginBottom: 20,
-            }}
-          >
-            <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>
-              Outstanding Amount
-            </Text>
-            <Text
-              style={{
-                fontSize: 24,
-                fontWeight: "bold",
-                color: "#111827",
-              }}
-            >
-              ${((payments.length - totalPaid) * 120).toFixed(0)}
-            </Text>
-          </View>
-
-          {/* Search Bar */}
-          <View style={{ marginBottom: 16 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "#F3F4F6",
-                borderRadius: 8,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-              }}
-            >
-              <Search size={20} color="#6B7280" />
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: "#9CA3AF",
-                  marginLeft: 8,
-                }}
-              >
-                Find a student
-              </Text>
+      {!loading && (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
+          {/* Summary Cards */}
+          <View style={{ padding: 20 }}>
+            <View style={{ flexDirection: "row", marginBottom: 20 }}>
+              <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1, marginRight: 12 }}>
+                <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Total Paid</Text>
+                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>${totalAmount.toFixed(0)}</Text>
+              </View>
+              <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1 }}>
+                <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Students Paid</Text>
+                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>{totalPaid} / {payments.length}</Text>
+              </View>
             </View>
-          </View>
 
-          {/* Filter Buttons */}
-          <View style={{ flexDirection: "row" }}>
-            {[
-              { key: "all", label: "All" },
-              { key: "paid", label: "Paid" },
-              { key: "unpaid", label: "Unpaid" },
-            ].map((filter, index) => (
-              <TouchableOpacity
-                key={filter.key}
-                onPress={() =>
-                  setSelectedFilter(
-                    filter.key === "unpaid" ? "pending" : (filter.key as FilterType),
-                  )
-                }
-                style={{
-                  backgroundColor:
-                    selectedFilter === filter.key ||
-                    (filter.key === "unpaid" && selectedFilter === "pending")
-                      ? "#2563EB"
-                      : "#E5E7EB",
-                  paddingHorizontal: 20,
-                  paddingVertical: 10,
-                  borderRadius: 8,
-                  marginRight: index < 2 ? 8 : 0,
-                }}
-              >
-                <Text
+            <View style={{ backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1, marginBottom: 20 }}>
+              <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Outstanding Amount</Text>
+              <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>${((payments.length - totalPaid) * 120).toFixed(0)}</Text>
+            </View>
+
+            {/* Filter Buttons */}
+            <View style={{ flexDirection: "row" }}>
+              {[{ key: "all", label: "All" }, { key: "paid", label: "Paid" }, { key: "pending", label: "Unpaid" }].map((filter, index) => (
+                <TouchableOpacity
+                  key={filter.key}
+                  onPress={() => setSelectedFilter(filter.key as FilterType)}
                   style={{
-                    color:
-                      selectedFilter === filter.key ||
-                      (filter.key === "unpaid" && selectedFilter === "pending")
-                        ? "#fff"
-                        : "#6B7280",
-                    fontWeight: "600",
-                    fontSize: 14,
+                    backgroundColor: selectedFilter === filter.key ? "#2563EB" : "#E5E7EB",
+                    paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, marginRight: index < 2 ? 8 : 0,
                   }}
                 >
-                  {filter.label}
+                  <Text style={{ color: selectedFilter === filter.key ? "#fff" : "#6B7280", fontWeight: "600", fontSize: 14 }}>
+                    {filter.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Payments List */}
+          <View style={{ paddingHorizontal: 20 }}>
+            {filteredPayments.length === 0 && (
+              <View style={{ backgroundColor: "#fff", padding: 40, borderRadius: 12, alignItems: "center" }}>
+                <DollarSign size={40} color="#6B7280" />
+                <Text style={{ fontSize: 16, color: "#6B7280", marginTop: 12, textAlign: "center" }}>
+                  No payments found
                 </Text>
-              </TouchableOpacity>
+              </View>
+            )}
+
+            {filteredPayments.map((item) => (
+              <View key={item.id} style={{ backgroundColor: "#fff", padding: 16, borderRadius: 12, marginBottom: 12, elevation: 1, flexDirection: "row", alignItems: "center" }}>
+                {/* Checkbox */}
+                <TouchableOpacity onPress={() => handleCheckboxPress(item)} style={{ marginRight: 12 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  {item.status === "paid" ? <CheckSquare size={24} color="#2563EB" /> : <Square size={24} color="#9CA3AF" />}
+                </TouchableOpacity>
+
+                {/* Avatar */}
+                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "#E5E7EB", justifyContent: "center", alignItems: "center", marginRight: 12 }}>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#6B7280" }}>{item.childName.charAt(0).toUpperCase()}</Text>
+                </View>
+
+                {/* Info */}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}>{item.childName}</Text>
+                  <Text style={{ fontSize: 13, color: "#6B7280" }}>Parent: {item.parentName}</Text>
+                  {item.childClass !== "" && <Text style={{ fontSize: 13, color: "#9CA3AF" }}>Class: {item.route}</Text>}
+                </View>
+
+                {/* Status dot */}
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: item.status === "paid" ? "#10B981" : "#F59E0B", marginRight: 6 }} />
+                  <Text style={{ fontSize: 14, color: "#6B7280" }}>{item.status === "paid" ? "Paid" : "Unpaid"}</Text>
+                </View>
+              </View>
             ))}
           </View>
-        </View>
-
-        {/* Payments List */}
-        <View style={{ paddingHorizontal: 20 }}>
-          {filteredPayments.map((payment) => (
-            <View
-              key={payment.id}
-              style={{
-                backgroundColor: "#fff",
-                padding: 16,
-                borderRadius: 12,
-                marginBottom: 12,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
-              {/* Checkbox */}
-              <TouchableOpacity
-                onPress={() => handleCheckboxPress(payment)}
-                style={{ marginRight: 12 }}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                {payment.status === "paid" ? (
-                  <CheckSquare size={24} color="#2563EB" />
-                ) : (
-                  <Square size={24} color="#9CA3AF" />
-                )}
-              </TouchableOpacity>
-
-              {/* Profile Circle */}
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: "#E5E7EB",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginRight: 12,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 18, fontWeight: "bold", color: "#6B7280" }}
-                >
-                  {payment.studentName.charAt(0)}
-                </Text>
-              </View>
-
-              {/* Student Info */}
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    color: "#111827",
-                  }}
-                >
-                  {payment.studentName}
-                </Text>
-                <Text style={{ fontSize: 14, color: "#6B7280" }}>
-                  {payment.route}
-                </Text>
-              </View>
-
-              {/* Status */}
-              <View style={{ alignItems: "flex-end" }}>
-                {payment.status === "paid" ? (
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <View
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: "#10B981",
-                        marginRight: 6,
-                      }}
-                    />
-                    <Text style={{ fontSize: 14, color: "#6B7280" }}>Paid</Text>
-                  </View>
-                ) : (
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <View
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: "#F59E0B",
-                        marginRight: 6,
-                      }}
-                    />
-                    <Text style={{ fontSize: 14, color: "#6B7280" }}>
-                      Unpaid
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          ))}
-
-          {filteredPayments.length === 0 && (
-            <View
-              style={{
-                backgroundColor: "#fff",
-                padding: 40,
-                borderRadius: 12,
-                alignItems: "center",
-              }}
-            >
-              <DollarSign size={40} color="#6B7280" />
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: "#6B7280",
-                  marginTop: 12,
-                  textAlign: "center",
-                }}
-              >
-                No payments found for this filter
-              </Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
+        </ScrollView>
+      )}
 
       {/* Confirmation Modal */}
-      <Modal
-        visible={showConfirmation}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleCancel}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 20,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: 16,
-              padding: 24,
-              width: "100%",
-              maxWidth: 400,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 3.84,
-              elevation: 5,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 20,
-                fontWeight: "bold",
-                color: "#111827",
-                marginBottom: 12,
-              }}
-            >
-              Payment Received
-            </Text>
-            <Text
-              style={{
-                fontSize: 16,
-                color: "#6B7280",
-                marginBottom: 24,
-              }}
-            >
-              Send payment received notification for{" "}
-              {pendingPayment?.studentName}?
+      <Modal visible={showConfirmation} transparent animationType="fade" onRequestClose={handleCancel}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+          <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 24, width: "100%", maxWidth: 400, elevation: 5 }}>
+            <Text style={{ fontSize: 20, fontWeight: "bold", color: "#111827", marginBottom: 12 }}>Payment Received</Text>
+            <Text style={{ fontSize: 16, color: "#6B7280", marginBottom: 24 }}>
+              Send payment confirmation to {pendingPayment?.parentName} for {pendingPayment?.childName}?
             </Text>
             <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity
-                onPress={handleCancel}
-                style={{
-                  flex: 1,
-                  backgroundColor: "#F3F4F6",
-                  paddingVertical: 12,
-                  borderRadius: 8,
-                  alignItems: "center",
-                  marginRight: 12,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    color: "#6B7280",
-                  }}
-                >
-                  Cancel
-                </Text>
+              <TouchableOpacity onPress={handleCancel} disabled={isSending} style={{ flex: 1, backgroundColor: "#F3F4F6", paddingVertical: 12, borderRadius: 8, alignItems: "center", marginRight: 12 }}>
+                <Text style={{ fontSize: 16, fontWeight: "600", color: "#6B7280" }}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleConfirm}
-                style={{
-                  flex: 1,
-                  backgroundColor: "#2563EB",
-                  paddingVertical: 12,
-                  borderRadius: 8,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    color: "#fff",
-                  }}
-                >
-                  OK
-                </Text>
+              <TouchableOpacity onPress={handleConfirm} disabled={isSending} style={{ flex: 1, backgroundColor: isSending ? "#93C5FD" : "#2563EB", paddingVertical: 12, borderRadius: 8, alignItems: "center" }}>
+                <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>{isSending ? "Sending..." : "OK"}</Text>
               </TouchableOpacity>
             </View>
           </View>
