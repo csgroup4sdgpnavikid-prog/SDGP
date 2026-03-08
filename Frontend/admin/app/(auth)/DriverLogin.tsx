@@ -35,7 +35,7 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.safe}>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.push("/RoleSelection)")}>
         <Text style={styles.backText}>‹</Text>
       </TouchableOpacity>
 
