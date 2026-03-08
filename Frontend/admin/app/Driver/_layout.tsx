@@ -60,6 +60,7 @@ export default function TabLayout() {
       {/* ── Hidden Tabs (not shown in tab bar) ── */}
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen name="explore" options={{ href: null }} />
+      <Tabs.Screen name="DriverSettings" options={{ href: null }} />
     </Tabs>
   );
 }

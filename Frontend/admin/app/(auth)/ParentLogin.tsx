@@ -1,6 +1,6 @@
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
 import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import {
   Image,
@@ -14,29 +14,13 @@ import {
 
 export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const { login, isLoading } = useAuth();
   const router = useRouter();
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      alert("Please enter both email and password");
-      return;
-    }
-    try {
-      await login(email, password, 'parent');
-      router.replace('/Parent');
-    } catch (error: any) {
-      alert(error.message || "Login failed");
-    }
-  };
 
   return (
     <SafeAreaView style={styles.safe}>
-
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>‹</Text>
+     
+      <TouchableOpacity onPress={() => router.back()}>
+        <Ionicons name="arrow-back" size={24} color="#111827" />
       </TouchableOpacity>
 
       <View style={styles.container}>
@@ -75,12 +59,12 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={() => router.push("/SendMail")}>
+        <TouchableOpacity>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
-          <Text style={styles.loginText}>{isLoading ? "Logging in..." : "Login"}</Text>
+        <TouchableOpacity style={styles.loginButton}>
+          <Text style={styles.loginText}>Login</Text>
         </TouchableOpacity>
 
         <View style={styles.orRow}>

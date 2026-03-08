@@ -22,25 +22,6 @@ type ChildInfoType = {
   parentContact: string;
 };
 
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-
-// Type definition for child information
-type ChildInfoType = {
-  studentName: string;
-  school: string;
-  routeNumber: string;
-  driver: string;
-  pickup: string;
-  dropoff: string;
-  parentContact: string;
-};
 // Parent screen to view and manage child's transport information
 export default function YourChild() {
   const navigation = useNavigation();
@@ -104,70 +85,6 @@ export default function YourChild() {
   useEffect(() => {
     checkDriverRatingEligibility();
   }, [lastRatedDate]);
-
-  const InfoRow = ({
-    label,
-    field,
-    editable = true,
-  }: {
-    label: string;
-    field: keyof ChildInfoType;
-    editable?: boolean;
-  }) => {
-    const isEditing = editingField === field;
-
-    return (
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>{label}</Text>
-
-        {isEditing ? (
-          <TextInput
-            style={styles.input}
-            value={childInfo[field]}
-            onChangeText={(text) =>
-              setChildInfo({ ...childInfo, [field]: text })
-            }
-            onBlur={() => setEditingField(null)}
-            autoFocus
-          />
-        ) : (
-          <View style={styles.valueRow}>
-            <Text style={styles.infoValue}>{childInfo[field]}</Text>
-
-            {editable && (
-              <TouchableOpacity onPress={() => setEditingField(field)}>
-                <Ionicons name="create-outline" size={18} color="#666" />
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  // Confirm attendance before updating state
-  const confirmAttendance = (type: "ABSENT" | "PRESENT") => {
-    Alert.alert("Confirm Attendance", `Are you sure your child is ${type}?`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "OK", onPress: () => setAttendance(type) },
-    ]);
-  };
-
-  // State storing editable child information
-  const [childInfo, setChildInfo] = useState<ChildInfoType>({
-    studentName: "Amana",
-    school: "Musaeus College",
-    routeNumber: "R-05",
-    driver: "Mr. Sunil Perera",
-    pickup: "123 Main St, Colombo",
-    dropoff: "456 Park Ave, Colombo",
-    parentContact: "0771234567",
-  });
-
-  // Track which field is currently being edited
-  const [editingField, setEditingField] = useState<keyof ChildInfoType | null>(
-    null
-  );
 
   const InfoRow = ({
     label,

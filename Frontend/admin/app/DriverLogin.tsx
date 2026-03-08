@@ -1,57 +1,35 @@
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
 import { useRouter } from "expo-router";
-import { useAuth } from "../../context/AuthContext";
+import React, { useState } from "react";
 import {
-  Image,
   SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  Image
 } from "react-native";
 
 export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const { login, isLoading } = useAuth();
   const router = useRouter();
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      alert("Please enter both email and password");
-      return;
-    }
-    try {
-      await login(email, password, 'driver');
-      router.replace('/Driver');
-    } catch (error: any) {
-      alert(error.message || "Login failed");
-    }
-  };
 
   return (
     <SafeAreaView style={styles.safe}>
-
-      <TouchableOpacity style={styles.backButton} onPress={() => router.push("/RoleSelection)")}>
-        <Text style={styles.backText}>‹</Text>
+      
+      <TouchableOpacity onPress={() => router.back()}>
+        <Ionicons name="arrow-back" size={24} color="#111827" />
       </TouchableOpacity>
 
       <View style={styles.container}>
-        <Text style={styles.title}>
-          Welcome back! Glad{"\n"}to see you, Again!
-        </Text>
-
+        <Text style={styles.title}>Welcome back! Glad to see you, Again!</Text>
+        
         <TextInput
           placeholder="Enter your email"
           placeholderTextColor="#9CA3AF"
           style={styles.input}
           keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
         />
 
         <View style={styles.passwordContainer}>
@@ -60,27 +38,25 @@ export default function LoginScreen() {
             placeholderTextColor="#9CA3AF"
             secureTextEntry={!showPassword}
             style={styles.passwordInput}
-            value={password}
-            onChangeText={setPassword}
           />
+
           <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
           >
-
             <Ionicons
               name={showPassword ? "eye-off" : "eye"}
               size={22}
               color="#6B7280"
-            />
+            /> 
           </TouchableOpacity>
-        </View>
+        </View>  
 
-        <TouchableOpacity onPress={() => router.push("/SendMail")}>
+         <TouchableOpacity>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
-          <Text style={styles.loginText}>{isLoading ? "Logging in..." : "Login"}</Text>
+        <TouchableOpacity style={styles.loginButton}>
+          <Text style={styles.loginText}>Login</Text>
         </TouchableOpacity>
 
         <View style={styles.orRow}>
@@ -88,18 +64,18 @@ export default function LoginScreen() {
           <Text style={styles.orText}>Or login with</Text>
           <View style={styles.line} />
         </View>
-
+ 
         <View style={styles.socialRow}>
           <TouchableOpacity style={styles.socialButton}>
             <FontAwesome name="facebook" size={22} color="#1877F2" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.socialButton}>
-            <Image
-              source={require("../../assets/images/google.png")}
-              style={{ width: 40, height: 22 }}
-              resizeMode="contain"
-            />
+          <Image
+            source={require("../assets/images/google.png")}
+            style={{ width: 40, height: 22 }}
+            resizeMode="contain"
+          />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.socialButton}>
@@ -107,12 +83,14 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
+
+
         <View style={styles.registerRow}>
           <Text style={styles.registerText}>
             Don’t have an account?{" "}
           </Text>
 
-          <TouchableOpacity onPress={() => router.push("/DriverRegister")}>
+          <TouchableOpacity onPress={() => console.log("Go to Register")}>
             <Text style={styles.registerNow}>Register Now</Text>
           </TouchableOpacity>
         </View>
@@ -126,23 +104,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-  },
-
-  backButton: {
-    marginLeft: 23,
-    marginTop: 40,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  backText: {
-    fontSize: 20,
-    fontWeight: "600",
   },
 
   container: {
@@ -162,12 +123,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#5AA9E6",
     borderRadius: 12,
-    paddingHorizontal: 14,
+    paddingHorizontal:14,
     fontSize: 15,
     marginBottom: 18,
   },
 
-  passwordContainer: {
+   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
@@ -181,12 +142,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
   },
-
+  
   eyeText: {
     fontSize: 18,
   },
 
-  forgotText: {
+   forgotText: {
     textAlign: "right",
     fontWeight: "600",
     marginVertical: 14,
@@ -208,7 +169,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  orRow: {
+   orRow: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 20,
@@ -227,7 +188,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  socialRow: {
+   socialRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 24,
@@ -262,4 +223,5 @@ const styles = StyleSheet.create({
     color: "#5AA9E6",
     fontWeight: "700",
   },
+  
 });
