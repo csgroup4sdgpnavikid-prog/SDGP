@@ -54,13 +54,13 @@ export default function StudentsScreen() {
   const filtered = students
     .filter((s) => s.name?.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
-      // Present (non-Absent) always comes before Absent
+      
       if (a.status === 'Absent' && b.status !== 'Absent') return 1;
       if (a.status !== 'Absent' && b.status === 'Absent') return -1;
       return 0;
     });
 
-  // Summary counts
+  
   const presentCount = students.filter((s) => s.status !== 'Absent').length;
   const absentCount  = students.filter((s) => s.status === 'Absent').length;
 
@@ -68,7 +68,7 @@ export default function StudentsScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      {/* Header */}
+      
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton}>
           <ChevronLeft color="black" size={28} />
@@ -79,7 +79,7 @@ export default function StudentsScreen() {
 
       <View style={styles.blueContent}>
 
-        {/* Summary row */}
+        
         <View style={styles.summaryRow}>
           <View style={[styles.summaryCard, { backgroundColor: '#DCFCE7' }]}>
             <CheckCircle2 color="#22C55E" size={20} />
@@ -93,7 +93,7 @@ export default function StudentsScreen() {
           </View>
         </View>
 
-        {/* Search */}
+        
         <View style={styles.searchSection}>
           <Search color="#94A3B8" size={20} />
           <TextInput
@@ -104,7 +104,7 @@ export default function StudentsScreen() {
           />
         </View>
 
-        {/* List */}
+        
         <FlatList
           data={filtered}
           renderItem={({ item }) => <StudentCard item={item} />}
