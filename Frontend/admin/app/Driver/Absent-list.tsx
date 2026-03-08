@@ -118,3 +118,122 @@ export default function StudentsScreen() {
     </SafeAreaView>
   );
 }
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    height: 60,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  backButton: {
+    padding: 5,
+  },
+  blueContent: {
+    flex: 1,
+    backgroundColor: '#8ECAE6',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    paddingHorizontal: 20,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    gap: 12,
+  },
+  summaryCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    gap: 8,
+  },
+  summaryCount: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  summaryLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  searchSection: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginVertical: 16,
+    height: 50,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  avatarContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoContainer: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  nameText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  idLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  statusSection: {
+    alignItems: 'flex-end',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 5,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 40,
+    color: '#6B7280',
+    fontSize: 15,
+  },
+});
