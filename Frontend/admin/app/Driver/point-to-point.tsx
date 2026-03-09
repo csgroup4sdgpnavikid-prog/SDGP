@@ -165,3 +165,119 @@ const sendNotification = (student: Student, stop: Stop) => {
       );
     }, 500);
   }, []);
+  const tabColor = activeTab === "pickup" ? "#2563EB" : "#D97706";
+  const tabBg = activeTab === "pickup" ? "#EFF6FF" : "#FFFBEB";
+  const tabTextColor = activeTab === "pickup" ? "#1E3A8A" : "#92400E";
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
+      <StatusBar style="dark" />
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <View
+        style={{
+          backgroundColor: "#fff",
+          paddingTop: insets.top + 16,
+          paddingHorizontal: 20,
+          paddingBottom: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: "#E5E7EB",
+          zIndex: 10,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 16,
+          }}
+        >
+          <View>
+            <Text style={{ fontSize: 22, fontWeight: "800", color: "#111827" }}>
+              Van 1 · Driver Dashboard
+            </Text>
+            <Text style={{ fontSize: 14, color: "#6B7280", marginTop: 2 }}>
+              {totalStudents} students • {allStops.length} stops
+            </Text>
+          </View>
+          {/* Progress badge */}
+          <View
+            style={{
+              backgroundColor: tabBg,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: tabColor + "55",
+            }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: "700", color: tabColor }}>
+              {doneCount}/{totalStudents} done
+            </Text>
+          </View>
+        </View>
+
+        {/* ── Tab Bar ───────────────────────────────────────────────────────── */}
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          {(["pickup", "dropoff"] as RouteTab[]).map((tab) => {
+            const active = activeTab === tab;
+            const color = tab === "pickup" ? "#2563EB" : "#D97706";
+            return (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => {
+                  setActiveTab(tab);
+                  setDoneStudents({});
+                }}
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  backgroundColor: active ? color : "#F3F4F6",
+                  marginBottom: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontWeight: "700",
+                    fontSize: 15,
+                    color: active ? "#fff" : "#6B7280",
+                  }}
+                >
+                  {tab === "pickup" ? "🏠 Pick Up" : "🏫 Drop Off"}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: active ? "#fff" : "#9CA3AF",
+                    marginTop: 2,
+                  }}
+                >
+                  {tab === "pickup"
+                    ? "Homes → School"
+                    : "School → Homes"}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* ── Map ────────────────────────────────────────────────────────────── */}
+      <View style={{ flex: 1 }}>
+        <MapView
+          ref={mapRef}
+          style={{ flex: 1 }}
+          initialRegion={{
+            latitude: 37.79025,
+            longitude: -122.4304,
+            latitudeDelta: 0.015,
+            longitudeDelta: 0.015,
+          }}
+          showsUserLocation
+          showsMyLocationButton={false}
+          showsCompass
+          loadingEnabled
+        ></MapView>
