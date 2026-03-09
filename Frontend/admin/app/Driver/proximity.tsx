@@ -37,3 +37,35 @@ interface Stop {
   pickupTime: string;
   dropoffTime: string;
 }
+
+
+type RouteTab = "pickup" | "dropoff";
+type NotifyType = "proximity" | "confirmed";
+
+const allStops: Stop[] = [
+  {
+    id: 1,
+    name: "Maple Street",
+    address: "123 Maple St",
+    latitude: 37.78825,
+    longitude: -122.4324,
+    pickupTime: "7:15 AM",
+    dropoffTime: "3:30 PM",
+    students: [
+
+        {
+        id: "s1",
+        name: "Emma Johnson",
+        parentPhone: "+1-555-0101",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_1]",
+        status: "pending",
+      },
+      {
+        id: "s2",
+        name: "Lucas Brown",
+        parentPhone: "+1-555-0102",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_2]",
+        status: "pending",
+      },
+    ],
+},
