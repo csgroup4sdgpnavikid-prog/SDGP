@@ -116,3 +116,20 @@ const allStops: Stop[] = [
       },
     ],
   },
+
+  {
+    id: 4,
+    name: "Elm Street",
+    address: "321 Elm St",
+    latitude: 37.79125,
+    longitude: -122.4294,
+    pickupTime: "7:38 AM",
+    dropoffTime: "3:52 PM",
+    students: [
+      {
+        id: "s6",
+        name: "Noah Garcia",
+        parentPhone: "+1-555-0106",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_6]",
+        status: "pending",
+      },
