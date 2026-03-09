@@ -163,3 +163,15 @@ function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: numbe
     Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
+
+async function postNotification(payload: {
+  type: NotifyType;
+  routeTab: RouteTab;
+  stopId: number;
+  stopName: string;
+  studentId: string;
+  studentName: string;
+  parentPhone: string;
+  parentExpoPushToken: string;
+  scheduledTime: string;
+})
