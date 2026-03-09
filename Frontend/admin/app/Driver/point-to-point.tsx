@@ -410,4 +410,291 @@ const sendNotification = (student: Student, stop: Stop) => {
           )}
         </TouchableOpacity>
       </View>
+      {/* ── Stops Panel ────────────────────────────────────────────────────── */}
+      {showStopsList && (
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "#fff",
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            maxHeight: "60%",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -3 },
+            shadowOpacity: 0.15,
+            shadowRadius: 10,
+            elevation: 12,
+          }}
+        >
+          {/* Drag handle */}
+          <View
+            style={{ paddingTop: 12, paddingBottom: 4, alignItems: "center" }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                backgroundColor: "#D1D5DB",
+                borderRadius: 2,
+              }}
+            />
+          </View>
+
+          {/* Panel header */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingHorizontal: 20,
+              paddingVertical: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: "#F3F4F6",
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#111827" }}>
+              {activeTab === "pickup" ? "🏠 Pick Up Stops" : "🏫 Drop Off Stops"}
+            </Text>
+            <Text style={{ fontSize: 13, color: "#6B7280" }}>
+              Tap stop → Navigate
+            </Text>
+          </View>
+
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 12,
+              paddingBottom: insets.bottom + 24,
+            }}
+          >
+            {orderedStops.map((stop, index) => {
+              const allDone = stop.students.every((s) => doneStudents[s.id]);
+              const time =
+                activeTab === "pickup" ? stop.pickupTime : stop.dropoffTime;
+
+              return (
+                <View
+                  key={stop.id}
+                  style={{
+                    backgroundColor: allDone ? "#F0FDF4" : "#F9FAFB",
+                    borderRadius: 14,
+                    marginBottom: 12,
+                    borderLeftWidth: 4,
+                    borderLeftColor: allDone ? "#10B981" : tabColor,
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* Stop header — tap to navigate */}
+                  <TouchableOpacity
+                    onPress={() => navigateToStop(stop)}
+                    style={{
+                      padding: 14,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 6,
+                          marginBottom: 4,
+                        }}
+                      >
+                        <View
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: 11,
+                            backgroundColor: allDone ? "#10B981" : tabColor,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: "#fff",
+                              fontSize: 11,
+                              fontWeight: "700",
+                            }}
+                          >
+                            {allDone ? "✓" : index + 1}
+                          </Text>
+                        </View>
+                        <Text
+                          style={{
+                            fontSize: 16,
+                            fontWeight: "700",
+                            color: "#111827",
+                          }}
+                        >
+                          {stop.name}
+                        </Text>
+                      </View>
+                      <Text
+                        style={{ fontSize: 13, color: "#6B7280", marginLeft: 28 }}
+                      >
+                        {stop.address}
+                      </Text>
+                    </View>
+
+                    {/* Navigate button */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        backgroundColor: tabColor + "18",
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Navigation size={13} color={tabColor} />
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: "600",
+                          color: tabColor,
+                        }}
+                      >
+                        Go
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* Students list */}
+                  <View
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingBottom: 12,
+                      gap: 6,
+                    }}
+                  >
+                    {stop.students.map((student) => {
+                      const done = !!doneStudents[student.id];
+                      return (
+                        <View
+                          key={student.id}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            backgroundColor: done ? "#DCFCE7" : "#fff",
+                            borderRadius: 10,
+                            paddingVertical: 10,
+                            paddingHorizontal: 12,
+                            borderWidth: 1,
+                            borderColor: done ? "#86EFAC" : "#E5E7EB",
+                          }}
+                        >
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <View
+                              style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 16,
+                                backgroundColor: done
+                                  ? "#10B981"
+                                  : tabColor + "22",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Text style={{ fontSize: 14 }}>
+                                {done ? "✓" : "👦"}
+                              </Text>
+                            </View>
+                            <View>
+                              <Text
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: "600",
+                                  color: done ? "#065F46" : "#111827",
+                                  textDecorationLine: done
+                                    ? "line-through"
+                                    : "none",
+                                }}
+                              >
+                                {student.name}
+                              </Text>
+                              {done && (
+                                <Text
+                                  style={{ fontSize: 11, color: "#059669" }}
+                                >
+                                  Parent notified ✓
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+
+                          {/* Mark done + notify parent */}
+                          {!done && (
+                            <TouchableOpacity
+                              onPress={() => markStudentDone(student, stop)}
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 5,
+                                backgroundColor: tabColor,
+                                paddingHorizontal: 12,
+                                paddingVertical: 7,
+                                borderRadius: 8,
+                              }}
+                            >
+                              <Bell size={13} color="#fff" />
+                              <Text
+                                style={{
+                                  color: "#fff",
+                                  fontSize: 12,
+                                  fontWeight: "700",
+                                }}
+                              >
+                                {activeTab === "pickup"
+                                  ? "Picked Up"
+                                  : "Dropped Off"}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+
+                  {/* Scheduled time */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      paddingHorizontal: 14,
+                      paddingBottom: 10,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: "#9CA3AF" }}>
+                      ⏰ Scheduled {time}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+}
+
 
