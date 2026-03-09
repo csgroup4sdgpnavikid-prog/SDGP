@@ -69,3 +69,21 @@ const allStops: Stop[] = [
       },
     ],
 },
+
+
+{
+    id: 2,
+    name: "Oak Avenue",
+    address: "456 Oak Ave",
+    latitude: 37.78925,
+    longitude: -122.4314,
+    pickupTime: "7:22 AM",
+    dropoffTime: "3:38 PM",
+    students: [
+      {
+        id: "s3",
+        name: "Sophia Davis",
+        parentPhone: "+1-555-0103",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_3]",
+        status: "pending",
+      },
