@@ -174,4 +174,17 @@ async function postNotification(payload: {
   parentPhone: string;
   parentExpoPushToken: string;
   scheduledTime: string;
-})
+}) {
+  try {
+    const res = await fetch(`${API_BASE}/notify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    console.log("[API] notify response:", json);
+    return json;
+  } catch (err) {
+    console.error("[API] notify failed:", err);
+  }
+}
