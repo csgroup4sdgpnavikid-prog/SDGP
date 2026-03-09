@@ -98,3 +98,21 @@ const allStops: Stop[] = [
     ],
   },
   
+  {
+    id: 3,
+    name: "Pine Road",
+    address: "789 Pine Rd",
+    latitude: 37.79025,
+    longitude: -122.4304,
+    pickupTime: "7:30 AM",
+    dropoffTime: "3:45 PM",
+    students: [
+      {
+        id: "s5",
+        name: "Olivia Miller",
+        parentPhone: "+1-555-0105",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_5]",
+        status: "pending",
+      },
+    ],
+  },
