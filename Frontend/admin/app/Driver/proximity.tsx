@@ -133,3 +133,13 @@ const allStops: Stop[] = [
         parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_6]",
         status: "pending",
       },
+      {
+        id: "s7",
+        name: "Ava Martinez",
+        parentPhone: "+1-555-0107",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_7]",
+        status: "pending",
+      },
+    ],
+  },
+];
