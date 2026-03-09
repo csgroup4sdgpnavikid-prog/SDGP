@@ -163,3 +163,45 @@ function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: numbe
     Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
+
+async function postNotification(payload: {
+  type: NotifyType;
+  routeTab: RouteTab;
+  stopId: number;
+  stopName: string;
+  studentId: string;
+  studentName: string;
+  parentPhone: string;
+  parentExpoPushToken: string;
+  scheduledTime: string;
+}) {
+  try {
+    const res = await fetch(`${API_BASE}/notify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    console.log("[API] notify response:", json);
+    return json;
+  } catch (err) {
+    console.error("[API] notify failed:", err);
+  }
+}
+
+export default function DriverMap() {
+  const insets = useSafeAreaInsets();
+  const mapRef  = useRef<MapView>(null);
+
+  const [activeTab,     setActiveTab]     = useState<RouteTab>("pickup");
+  const [showStopsList, setShowStopsList] = useState(false);
+  const [doneStudents,  setDoneStudents]  = useState<Record<string, boolean>>({});
+
+  const proximityFiredRef = useRef<Set<number>>(new Set());
+  const [driverCoords,    setDriverCoords]    = useState<{ latitude: number; longitude: number } | null>(null);
+  const [proximityToast,  setProximityToast]  = useState<string | null>(null);
+  const toastAnim = useRef(new Animated.Value(0)).current;
+
+  const orderedStops = activeTab === "pickup" ? allStops : [...allStops].reverse();
+  const totalStudents = allStops.reduce((n, s) => n + s.students.length, 0);
+  const doneCount = Object.values(doneStudents).filter(Boolean).length;
