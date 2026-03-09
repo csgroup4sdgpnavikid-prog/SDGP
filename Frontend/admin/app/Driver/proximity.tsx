@@ -143,3 +143,10 @@ const allStops: Stop[] = [
     ],
   },
 ];
+
+const school = {
+  name: "Washington Elementary",
+  address: "100 School Ave",
+  latitude: 37.79225,
+  longitude: -122.4284,
+};
