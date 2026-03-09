@@ -96,3 +96,40 @@ const school = {
   latitude: 37.79225,
   longitude: -122.4284,
 };
+export default function DriverMap() {
+  const insets = useSafeAreaInsets();
+  const mapRef = useRef<MapView>(null);
+
+  const [activeTab, setActiveTab] = useState<RouteTab>("pickup");
+  const [showStopsList, setShowStopsList] = useState(false);
+
+  
+  const [doneStudents, setDoneStudents] = useState<Record<string, boolean>>({});
+
+  
+  const orderedStops =
+    activeTab === "pickup" ? allStops : [...allStops].reverse();
+
+  
+  const totalStudents = allStops.reduce((n, s) => n + s.students.length, 0);
+  const doneCount = Object.values(doneStudents).filter(Boolean).length;
+
+  
+  const navigateToStop = (stop: Stop) => {
+    
+    mapRef.current?.animateToRegion(
+      {
+        latitude: stop.latitude,
+        longitude: stop.longitude,
+        latitudeDelta: 0.004,
+        longitudeDelta: 0.004,
+      },
+      800
+    );
+
+    
+    const url = `https://maps.google.com/?daddr=${stop.latitude},${stop.longitude}&directionsmode=driving`;
+    Linking.openURL(url).catch(() => {
+      Alert.alert("Navigation", `Navigating to ${stop.name}\n${stop.address}`);
+    });
+  };
