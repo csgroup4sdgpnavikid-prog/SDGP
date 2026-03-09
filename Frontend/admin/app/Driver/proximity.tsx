@@ -87,3 +87,79 @@ const allStops: Stop[] = [
         parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_3]",
         status: "pending",
       },
+
+      {
+        id: "s4",
+        name: "Mason Wilson",
+        parentPhone: "+1-555-0104",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_4]",
+        status: "pending",
+      },
+    ],
+  },
+  
+  {
+    id: 3,
+    name: "Pine Road",
+    address: "789 Pine Rd",
+    latitude: 37.79025,
+    longitude: -122.4304,
+    pickupTime: "7:30 AM",
+    dropoffTime: "3:45 PM",
+    students: [
+      {
+        id: "s5",
+        name: "Olivia Miller",
+        parentPhone: "+1-555-0105",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_5]",
+        status: "pending",
+      },
+    ],
+  },
+
+  {
+    id: 4,
+    name: "Elm Street",
+    address: "321 Elm St",
+    latitude: 37.79125,
+    longitude: -122.4294,
+    pickupTime: "7:38 AM",
+    dropoffTime: "3:52 PM",
+    students: [
+      {
+        id: "s6",
+        name: "Noah Garcia",
+        parentPhone: "+1-555-0106",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_6]",
+        status: "pending",
+      },
+      {
+        id: "s7",
+        name: "Ava Martinez",
+        parentPhone: "+1-555-0107",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_7]",
+        status: "pending",
+      },
+    ],
+  },
+];
+
+const school = {
+  name: "Washington Elementary",
+  address: "100 School Ave",
+  latitude: 37.79225,
+  longitude: -122.4284,
+};
+
+
+function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6_371_000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
