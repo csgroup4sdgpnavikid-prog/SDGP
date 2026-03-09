@@ -133,3 +133,35 @@ export default function DriverMap() {
       Alert.alert("Navigation", `Navigating to ${stop.name}\n${stop.address}`);
     });
   };
+const sendNotification = (student: Student, stop: Stop) => {
+    const action = activeTab === "pickup" ? "picked up" : "dropped off";
+    const timeLabel =
+      activeTab === "pickup" ? stop.pickupTime : stop.dropoffTime;
+
+    // In a real app: push notification via FCM/APNs or SMS
+    console.log(
+      `[Notification] → ${student.parentPhone}: ${student.name} was ${action} at ${stop.name} (${timeLabel})`
+    );
+
+    Alert.alert(
+      "📲 Notification Sent",
+      `${student.name}'s parent has been notified.\n\nStatus: ${student.name} was ${action} at ${stop.name}.`,
+      [{ text: "OK" }]
+    );
+  };
+
+  // ── Mark student as picked up / dropped off ───────────────────────────────
+  const markStudentDone = (student: Student, stop: Stop) => {
+    setDoneStudents((prev) => ({ ...prev, [student.id]: true }));
+    sendNotification(student, stop);
+  };
+
+  // ── Fit map on mount ──────────────────────────────────────────────────────
+  useEffect(() => {
+    setTimeout(() => {
+      mapRef.current?.fitToCoordinates(
+        allStops.map((s) => ({ latitude: s.latitude, longitude: s.longitude })),
+        { edgePadding: { top: 120, right: 50, bottom: 320, left: 50 }, animated: true }
+      );
+    }, 500);
+  }, []);
