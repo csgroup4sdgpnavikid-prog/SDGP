@@ -281,3 +281,133 @@ const sendNotification = (student: Student, stop: Stop) => {
           showsCompass
           loadingEnabled
         ></MapView>
+        {/* Route line */}
+          <Polyline
+            coordinates={orderedStops.map((s) => ({
+              latitude: s.latitude,
+              longitude: s.longitude,
+            }))}
+            strokeColor={tabColor}
+            strokeWidth={4}
+            lineDashPattern={[6, 4]}
+          />
+
+          {/* Stop markers — tap to navigate */}
+          {orderedStops.map((stop, index) => {
+            const allDone = stop.students.every((s) => doneStudents[s.id]);
+            const markerColor = allDone ? "#10B981" : tabColor;
+            return (
+              <Marker
+                key={stop.id}
+                coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
+                title={stop.name}
+                description={stop.address}
+                onPress={() => navigateToStop(stop)}
+              >
+                <View style={{ alignItems: "center" }}>
+                  <View
+                    style={{
+                      backgroundColor: markerColor,
+                      paddingHorizontal: 10,
+                      paddingVertical: 7,
+                      borderRadius: 18,
+                      borderWidth: 3,
+                      borderColor: "#fff",
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 3,
+                      elevation: 6,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    {allDone ? (
+                      <Text style={{ fontSize: 12 }}>✓</Text>
+                    ) : (
+                      <Text
+                        style={{ color: "#fff", fontWeight: "bold", fontSize: 13 }}
+                      >
+                        {index + 1}
+                      </Text>
+                    )}
+                  </View>
+                  <View
+                    style={{
+                      width: 0,
+                      height: 0,
+                      borderLeftWidth: 6,
+                      borderRightWidth: 6,
+                      borderTopWidth: 8,
+                      borderLeftColor: "transparent",
+                      borderRightColor: "transparent",
+                      borderTopColor: markerColor,
+                    }}
+                  />
+                </View>
+              </Marker>
+            );
+          })}
+
+          {/* School marker */}
+          <Marker
+            coordinate={{ latitude: school.latitude, longitude: school.longitude }}
+            title={school.name}
+            description={school.address}
+          >
+            <View style={{ alignItems: "center" }}>
+              <View
+                style={{
+                  backgroundColor: "#059669",
+                  paddingHorizontal: 10,
+                  paddingVertical: 7,
+                  borderRadius: 18,
+                  borderWidth: 3,
+                  borderColor: "#fff",
+                  elevation: 6,
+                }}
+              >
+                <Text style={{ fontSize: 14 }}>🏫</Text>
+              </View>
+              <View
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeftWidth: 6,
+                  borderRightWidth: 6,
+                  borderTopWidth: 8,
+                  borderLeftColor: "transparent",
+                  borderRightColor: "transparent",
+                  borderTopColor: "#059669",
+                }}
+              />
+            </View>
+          </Marker>
+        </MapView>
+
+        {/* ── Toggle list button ────────────────────────────────────────────── */}
+        <TouchableOpacity
+          onPress={() => setShowStopsList(!showStopsList)}
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            backgroundColor: "#fff",
+            borderRadius: 12,
+            padding: 12,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+        >
+          {showStopsList ? (
+            <ChevronDown size={22} color={tabColor} />
+          ) : (
+            <ChevronUp size={22} color={tabColor} />
+          )}
+        </TouchableOpacity>
+      </View>
+
