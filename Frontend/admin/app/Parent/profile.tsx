@@ -16,6 +16,8 @@ import {
   View,
 } from "react-native";
 
+// State variables used to store profile data
+// Includes image, contact details, and password fields
 export default function ParentProfileCard() {
   const router = useRouter();
   const [image, setImage] = useState<string | null>(null);
