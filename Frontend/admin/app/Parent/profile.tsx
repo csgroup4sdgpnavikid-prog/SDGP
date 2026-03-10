@@ -20,6 +20,7 @@ import {
 // Includes image, contact details, and password fields
 export default function ParentProfileCard() {
   const router = useRouter();
+  // Stores selected profile image from device gallery
   const [image, setImage] = useState<string | null>(null);
   const [name, setName] = useState("Jane Doe");
   const [email, setEmail] = useState("jane.doe@email.com");
