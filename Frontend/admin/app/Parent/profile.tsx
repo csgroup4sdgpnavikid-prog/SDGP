@@ -1,5 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+// ParentProfileCard Screen
+// This component displays the parent profile information.
+// It allows updating personal details, profile image,
+// and changing the account password.
+import { Ionicons } from "@expo/vector-icons"; // Importing necessary libraries for UI components,
+import * as ImagePicker from "expo-image-picker"; // navigation, icons and image picker functionality
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -12,8 +16,11 @@ import {
   View,
 } from "react-native";
 
+// State variables used to store profile data
+// Includes image, contact details, and password fields
 export default function ParentProfileCard() {
   const router = useRouter();
+  // Stores selected profile image from device gallery
   const [image, setImage] = useState<string | null>(null);
   const [name, setName] = useState("Jane Doe");
   const [email, setEmail] = useState("jane.doe@email.com");
@@ -25,7 +32,10 @@ export default function ParentProfileCard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Function to open device gallery
+  // Allows user to select and crop a profile image
   const pickImage = async () => {
+    // TODO: Add option to capture image directly from camera
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -38,7 +48,9 @@ export default function ParentProfileCard() {
     }
   };
 
+  // Handles password change validation and feedback messages
   const handlePasswordChange = () => {
+    // Ensure all password fields are filled
     setError("");
     setSuccess("");
 
@@ -47,6 +59,7 @@ export default function ParentProfileCard() {
       return;
     }
 
+    // Password must be at least 6 characters for security
     if (newPassword.length < 6) {
       setError("New password must be at least 6 characters.");
       return;
@@ -66,6 +79,8 @@ export default function ParentProfileCard() {
     setConfirmPassword("");
   };
 
+  // Render parent profile interface
+  // Includes profile card, editable inputs, and password section
   return (
     <ScrollView style={styles.screen}>
       <TouchableOpacity
@@ -76,6 +91,7 @@ export default function ParentProfileCard() {
       </TouchableOpacity>
       <View style={styles.card}>
         {/* Profile Image */}
+        {/* Profile card displaying user image and name */}
         <TouchableOpacity
           onPress={pickImage}
           activeOpacity={0.8}
@@ -100,7 +116,7 @@ export default function ParentProfileCard() {
           <Text style={styles.name}>{name}</Text>
         </View>
       </View>
-
+      {/* Editable user information fields */}
       <View style={styles.detailsContainer}>
         {/*Parent Name*/}
         <Text style={styles.labelInput1}>Parent Name</Text>
@@ -143,6 +159,8 @@ export default function ParentProfileCard() {
           onChangeText={setVanNumber}
         />
       </View>
+
+      {/* Section allowing user to update account password */}
       {/* Change Password Section */}
       {/* Change Password Section */}
       <View style={styles.passwordSection}>
@@ -174,6 +192,7 @@ export default function ParentProfileCard() {
           />
         </View>
 
+        {/* Button to submit password update */}
         {/* Confirm Password */}
         <Text style={styles.labelInput5}>Confirm Password</Text>
         <View style={styles.inputBox5}>
@@ -201,6 +220,9 @@ export default function ParentProfileCard() {
     </ScrollView>
   );
 }
+
+// Stylesheet for ParentProfileCard layout
+// Defines card layout, input fields, buttons and spacing
 const styles = StyleSheet.create({
   container: {
     flex: 1,

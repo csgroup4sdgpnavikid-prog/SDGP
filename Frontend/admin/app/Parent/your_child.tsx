@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Linking, ScrollView } from "react-native";
 
 import {
@@ -22,12 +22,11 @@ type ChildInfoType = {
   parentContact: string;
 };
 
-// Parent screen to view and manage child's transport information
 export default function YourChild() {
   const navigation = useNavigation();
 
   const [attendance, setAttendance] = useState<"ABSENT" | "PRESENT" | null>(
-    null,
+    null
   );
 
   const confirmAttendance = (type: "ABSENT" | "PRESENT") => {
@@ -48,40 +47,35 @@ export default function YourChild() {
   });
 
   const [editingField, setEditingField] = useState<keyof ChildInfoType | null>(
-    null,
+    null
   );
-  // ⭐ DRIVER RATING STATE
-  const [driverRating, setDriverRating] = useState(0);
+
+  const [driverRating, setDriverRating] = useState<number>(0);
   const [lastRatedDate, setLastRatedDate] = useState<Date | null>(null);
-  const [canRateDriver, setCanRateDriver] = useState(true);
+  const [canRateDriver, setCanRateDriver] = useState<boolean>(true);
 
   const checkDriverRatingEligibility = () => {
     if (!lastRatedDate) {
       setCanRateDriver(true);
       return;
     }
+
     const now = new Date();
     const diffDays =
       (now.getTime() - lastRatedDate.getTime()) / (1000 * 60 * 60 * 24);
+
     setCanRateDriver(diffDays >= 90);
   };
-
-  const submitDriverRating = useCallback((value: number) => {
+  const submitDriverRating = (value: number) => {
     if (!canRateDriver) return;
+
     setDriverRating(value);
-    setLastRatedDate(new Date());
+    const today = new Date();
+    setLastRatedDate(today);
     setCanRateDriver(false);
+
     Alert.alert("Thank you", `You rated the driver ${value} stars`);
-    // TODO: save to database here
-  }, [canRateDriver]);
-
-  const handleStarPress = useCallback(
-    (star: number) => {
-      submitDriverRating(star);
-    },
-    [submitDriverRating],
-  );
-
+  };
   useEffect(() => {
     checkDriverRatingEligibility();
   }, [lastRatedDate]);
@@ -183,7 +177,7 @@ export default function YourChild() {
 
         <InfoRow label="Student Name" field="studentName" />
         <InfoRow label="School" field="school" />
-        <InfoRow label="Assign route Number" field="routeNumber" editable={false} />
+        <InfoRow label="Route Number" field="routeNumber" editable={false} />
         <InfoRow label="Assigned Driver" field="driver" editable={false} />
         <InfoRow label="Pickup Location" field="pickup" />
         <InfoRow label="Drop-off Location" field="dropoff" />
@@ -197,9 +191,30 @@ export default function YourChild() {
         <Text style={styles.driverInfo}>Vehicle: Van</Text>
         {/* replace with real data */}
         <Text style={styles.driverInfo}>Number: WP R-1234</Text>
-      
 
-        {/* replace with real data */}
+        <View style={styles.ratingContainer}>
+          <Text style={styles.ratingLabel}>Rate Driver:</Text>
+          <View style={styles.starsContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity
+                key={star}
+                onPress={() => submitDriverRating(star)}
+                disabled={!canRateDriver}
+              >
+                <Ionicons
+                  name={star <= driverRating ? "star" : "star-outline"}
+                  size={32}
+                  color={canRateDriver ? "#FFD700" : "#CCCCCC"}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+          {!canRateDriver && (
+            <Text style={styles.ratingMessage}>
+              Rating submitted. You can rate again later.
+            </Text>
+          )}
+        </View>
         <TouchableOpacity
           style={styles.callButton}
           onPress={() => Linking.openURL(`tel:0779876543`)} // replace with real driver phone
@@ -374,5 +389,24 @@ const styles = StyleSheet.create({
   callText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  ratingContainer: {
+    marginTop: 16,
+    alignItems: "center",
+  },
+  ratingLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  starsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  ratingMessage: {
+    fontSize: 12,
+    color: "#777",
+    fontStyle: "italic",
   },
 });
