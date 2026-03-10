@@ -48,6 +48,7 @@ export default function ParentProfileCard() {
     }
   };
 
+  // Handles password change validation and feedback messages
   const handlePasswordChange = () => {
     setError("");
     setSuccess("");
