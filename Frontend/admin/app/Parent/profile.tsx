@@ -2,8 +2,8 @@
 // This component displays the parent profile information.
 // It allows updating personal details, profile image,
 // and changing the account password.
-import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons"; // Importing necessary libraries for UI components,
+import * as ImagePicker from "expo-image-picker"; // navigation, icons and image picker functionality
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
