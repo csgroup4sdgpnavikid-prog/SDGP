@@ -1,0 +1,207 @@
+import * as Location from "expo-location";
+import { StatusBar } from "expo-status-bar";
+import { Bell, ChevronDown, ChevronUp, Navigation, Radio } from "lucide-react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Animated,
+  Linking,
+  PanResponder,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MapView, { Circle, Marker, Polyline } from "react-native-maps";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const API_BASE = "http://localhost:4000";
+
+const PROXIMITY_RADIUS_M = 300;
+
+interface Student {
+  id: string;
+  name: string;
+  parentPhone: string;
+  parentExpoPushToken: string; // FCM / Expo push token for the parent's phone
+  status: "pending" | "done";
+}
+
+interface Stop {
+  id: number;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  students: Student[];
+  pickupTime: string;
+  dropoffTime: string;
+}
+
+
+type RouteTab = "pickup" | "dropoff";
+type NotifyType = "proximity" | "confirmed";
+
+const allStops: Stop[] = [
+  {
+    id: 1,
+    name: "Maple Street",
+    address: "123 Maple St",
+    latitude: 37.78825,
+    longitude: -122.4324,
+    pickupTime: "7:15 AM",
+    dropoffTime: "3:30 PM",
+    students: [
+
+        {
+        id: "s1",
+        name: "Emma Johnson",
+        parentPhone: "+1-555-0101",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_1]",
+        status: "pending",
+      },
+      {
+        id: "s2",
+        name: "Lucas Brown",
+        parentPhone: "+1-555-0102",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_2]",
+        status: "pending",
+      },
+    ],
+},
+
+
+{
+    id: 2,
+    name: "Oak Avenue",
+    address: "456 Oak Ave",
+    latitude: 37.78925,
+    longitude: -122.4314,
+    pickupTime: "7:22 AM",
+    dropoffTime: "3:38 PM",
+    students: [
+      {
+        id: "s3",
+        name: "Sophia Davis",
+        parentPhone: "+1-555-0103",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_3]",
+        status: "pending",
+      },
+
+      {
+        id: "s4",
+        name: "Mason Wilson",
+        parentPhone: "+1-555-0104",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_4]",
+        status: "pending",
+      },
+    ],
+  },
+  
+  {
+    id: 3,
+    name: "Pine Road",
+    address: "789 Pine Rd",
+    latitude: 37.79025,
+    longitude: -122.4304,
+    pickupTime: "7:30 AM",
+    dropoffTime: "3:45 PM",
+    students: [
+      {
+        id: "s5",
+        name: "Olivia Miller",
+        parentPhone: "+1-555-0105",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_5]",
+        status: "pending",
+      },
+    ],
+  },
+
+  {
+    id: 4,
+    name: "Elm Street",
+    address: "321 Elm St",
+    latitude: 37.79125,
+    longitude: -122.4294,
+    pickupTime: "7:38 AM",
+    dropoffTime: "3:52 PM",
+    students: [
+      {
+        id: "s6",
+        name: "Noah Garcia",
+        parentPhone: "+1-555-0106",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_6]",
+        status: "pending",
+      },
+      {
+        id: "s7",
+        name: "Ava Martinez",
+        parentPhone: "+1-555-0107",
+        parentExpoPushToken: "ExponentPushToken[PARENT_TOKEN_7]",
+        status: "pending",
+      },
+    ],
+  },
+];
+
+const school = {
+  name: "Washington Elementary",
+  address: "100 School Ave",
+  latitude: 37.79225,
+  longitude: -122.4284,
+};
+
+
+function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6_371_000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function postNotification(payload: {
+  type: NotifyType;
+  routeTab: RouteTab;
+  stopId: number;
+  stopName: string;
+  studentId: string;
+  studentName: string;
+  parentPhone: string;
+  parentExpoPushToken: string;
+  scheduledTime: string;
+}) {
+  try {
+    const res = await fetch(`${API_BASE}/notify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    console.log("[API] notify response:", json);
+    return json;
+  } catch (err) {
+    console.error("[API] notify failed:", err);
+  }
+}
+
+export default function DriverMap() {
+  const insets = useSafeAreaInsets();
+  const mapRef  = useRef<MapView>(null);
+
+  const [activeTab,     setActiveTab]     = useState<RouteTab>("pickup");
+  const [showStopsList, setShowStopsList] = useState(false);
+  const [doneStudents,  setDoneStudents]  = useState<Record<string, boolean>>({});
+
+  const proximityFiredRef = useRef<Set<number>>(new Set());
+  const [driverCoords,    setDriverCoords]    = useState<{ latitude: number; longitude: number } | null>(null);
+  const [proximityToast,  setProximityToast]  = useState<string | null>(null);
+  const toastAnim = useRef(new Animated.Value(0)).current;
+
+  const orderedStops = activeTab === "pickup" ? allStops : [...allStops].reverse();
+  const totalStudents = allStops.reduce((n, s) => n + s.students.length, 0);
+  const doneCount = Object.values(doneStudents).filter(Boolean).length;

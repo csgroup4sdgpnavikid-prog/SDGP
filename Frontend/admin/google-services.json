@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "997311667098",
+    "project_id": "navi-kid-school-van-tracker",
+    "storage_bucket": "navi-kid-school-van-tracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:997311667098:android:75f1114bb67769f5be7823",
+        "android_client_info": {
+          "package_name": "com.anonymous.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlUeiscGtkvmX5N1V7ftuXkveMErSJmSg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

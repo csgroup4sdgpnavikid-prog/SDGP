@@ -1,35 +1,66 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Tabs } from "expo-router";
+import { Map, Megaphone, DollarSign, ClipboardList, User } from "lucide-react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarStyle: {
+          backgroundColor: "#fff",
+          borderTopWidth: 1,
+          borderColor: "#E5E7EB",
+          paddingTop: 4,
+        },
+        tabBarActiveTintColor: "#2563EB",
+        tabBarInactiveTintColor: "#6B7280",
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "500",
+        },
+      }}
+    >
+      {/* ── Visible Tabs (5 only) ── */}
       <Tabs.Screen
-        name="index"
+        name="DriverMap"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Map",
+          tabBarIcon: ({ color }) => <Map color={color} size={24} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="DriverAlert"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "Alerts",
+          tabBarIcon: ({ color }) => <Megaphone color={color} size={24} />,
         }}
       />
+      <Tabs.Screen
+        name="Payment"
+        options={{
+          title: "Payment",
+          tabBarIcon: ({ color }) => <DollarSign color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Absense"
+        options={{
+          title: "Attendance",
+          tabBarIcon: ({ color }) => <ClipboardList color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="DriverProfile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color }) => <User color={color} size={24} />,
+        }}
+      />
+
+      {/* ── Hidden Tabs (not shown in tab bar) ── */}
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="explore" options={{ href: null }} />
+      <Tabs.Screen name="DriverSettings" options={{ href: null }} />
     </Tabs>
   );
 }

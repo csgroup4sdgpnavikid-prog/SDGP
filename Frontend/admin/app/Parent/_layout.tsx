@@ -66,6 +66,20 @@ export default function TabLayout() {
           ),
         }}
       />
+      {/* Rate Driver */}
+      <Tabs.Screen
+        name="RateDriver"
+        options={{
+          title: "Rate Driver",
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "star" : "star-outline"}
+              color={color}
+              size={24}
+            />
+          ),
+        }}
+      />
       {/* Profile */}
       <Tabs.Screen
         name="profile"

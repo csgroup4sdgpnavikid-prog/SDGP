@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Image,
   Linking,
   ScrollView,
   StyleSheet,
@@ -9,14 +8,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 import MapView, { Marker } from "react-native-maps";
 
 export default function HomeScreen() {
-  // ✅ Driver phone number (static for now)
+  //Added driver call function(phone number static for now)
   const driverPhoneNumber = "+94702920962";
+
   const handleCallDriver = () => {
-    Linking.openURL(`tel:${driverPhoneNumber}`);
+    Linking.openURL(`tel:${driverPhoneNumber}`).catch(() =>
+      console.log("Unable to open dialer")
+    );
   };
 
   const router = useRouter();
@@ -30,12 +33,11 @@ export default function HomeScreen() {
 
   const now = new Date();
   const hour = now.getHours();
-  const greeting =
-    hour >= 17
-      ? "Good Evening"
-      : hour >= 12
-      ? "Good Afternoon"
-      : "Good Morning";
+  const greeting = () => {
+    if (hour >= 17) return "Good Evening";
+    if (hour >= 12) return "Good Afternoon";
+    return "Good Morning";
+  };
 
   const todayDate = now.toLocaleDateString("en-US", {
     weekday: "long",
@@ -53,7 +55,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>{greeting}!</Text>
+            <Text style={styles.greeting}>{greeting()}!</Text>
             <Text style={styles.name}>Amana</Text>
             <Text style={styles.date}>{todayDate}</Text>
           </View>
@@ -82,7 +84,7 @@ export default function HomeScreen() {
             onPress={() => setShowMap(!showMap)}
           >
             <Text style={styles.liveButtonText}>
-              {showMap ? "Hide Live Tracking" : "Show Live Tracking"}
+              📍 {showMap ? "Hide Live Tracking" : "Show Live Tracking"}
             </Text>
           </TouchableOpacity>
 
@@ -106,11 +108,9 @@ export default function HomeScreen() {
               }}
             >
               <Marker coordinate={vanLocation}>
-                <Image
-                  source={require("../../assets/images/van.png")}
-                  style={{ width: 40, height: 40 }}
-                  resizeMode="contain"
-                />
+                <View style={{ backgroundColor: "#1a237e", borderRadius: 20, padding: 6 }}>
+                  <Ionicons name="bus" size={24} color="#fff" />
+                </View>
               </Marker>
             </MapView>
           )}
@@ -138,6 +138,7 @@ export default function HomeScreen() {
 
           {/* Call Driver Button */}
           <TouchableOpacity
+            accessibilityLabel="Call the van driver"
             style={styles.callButton}
             onPress={handleCallDriver}
           >
@@ -160,8 +161,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: -70,
   },
-  greeting: { fontSize: 18, color: "#555" },
+  greeting: { fontSize: 18, color: "#374151" },
   name: { fontSize: 28, fontWeight: "bold", color: "#000" },
   date: { fontSize: 14, color: "#666" },
   routeButton: {
@@ -180,6 +182,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E5D98A",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   vanTitle: {
     fontSize: 18,
@@ -190,7 +196,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 20,
   },
   vanLabel: { fontSize: 14, color: "#555" },
   vanTimeBadge: {
@@ -198,6 +204,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
+  },
+  vanMarker: {
+    width: 40,
+    height: 40,
   },
   vanTimeText: { color: "#166534", fontWeight: "600", fontSize: 13 },
   liveButton: {
@@ -211,7 +221,7 @@ const styles = StyleSheet.create({
   liveButtonText: { color: "#fff", fontWeight: "600" },
   map: {
     width: "100%",
-    height: 200,
+    height: 400,
     marginTop: 20,
     borderRadius: 12,
   },
@@ -241,7 +251,7 @@ const styles = StyleSheet.create({
   },
   callButton: {
     marginTop: 20,
-    backgroundColor: "#93C5FD",
+    backgroundColor: "#60A5FA",
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
@@ -258,8 +268,9 @@ const styles = StyleSheet.create({
   },
   timelineTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 12,
+    color: "#1F2937",
   },
   timelineRow: {
     flexDirection: "row",
