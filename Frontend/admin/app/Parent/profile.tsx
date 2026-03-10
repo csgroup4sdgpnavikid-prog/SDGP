@@ -35,6 +35,7 @@ export default function ParentProfileCard() {
   // Function to open device gallery
   // Allows user to select and crop a profile image
   const pickImage = async () => {
+    // TODO: Add option to capture image directly from camera
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
