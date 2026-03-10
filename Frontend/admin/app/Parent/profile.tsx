@@ -1,3 +1,7 @@
+// ParentProfileCard Screen
+// This component displays the parent profile information.
+// It allows updating personal details, profile image,
+// and changing the account password.
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
