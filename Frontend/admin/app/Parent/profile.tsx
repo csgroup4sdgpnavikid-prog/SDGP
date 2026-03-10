@@ -220,6 +220,9 @@ export default function ParentProfileCard() {
     </ScrollView>
   );
 }
+
+// Stylesheet for ParentProfileCard layout
+// Defines card layout, input fields, buttons and spacing
 const styles = StyleSheet.create({
   container: {
     flex: 1,
