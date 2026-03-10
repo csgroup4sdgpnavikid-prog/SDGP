@@ -159,6 +159,8 @@ export default function ParentProfileCard() {
           onChangeText={setVanNumber}
         />
       </View>
+
+      {/* Section allowing user to update account password */}
       {/* Change Password Section */}
       {/* Change Password Section */}
       <View style={styles.passwordSection}>
