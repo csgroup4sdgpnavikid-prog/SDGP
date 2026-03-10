@@ -91,6 +91,7 @@ export default function ParentProfileCard() {
       </TouchableOpacity>
       <View style={styles.card}>
         {/* Profile Image */}
+        {/* Profile card displaying user image and name */}
         <TouchableOpacity
           onPress={pickImage}
           activeOpacity={0.8}
