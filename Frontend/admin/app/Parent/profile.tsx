@@ -50,6 +50,7 @@ export default function ParentProfileCard() {
 
   // Handles password change validation and feedback messages
   const handlePasswordChange = () => {
+    // Ensure all password fields are filled
     setError("");
     setSuccess("");
 
