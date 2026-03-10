@@ -116,7 +116,7 @@ export default function ParentProfileCard() {
           <Text style={styles.name}>{name}</Text>
         </View>
       </View>
-
+      {/* Editable user information fields */}
       <View style={styles.detailsContainer}>
         {/*Parent Name*/}
         <Text style={styles.labelInput1}>Parent Name</Text>
