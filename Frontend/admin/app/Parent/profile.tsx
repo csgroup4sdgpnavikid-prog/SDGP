@@ -32,6 +32,8 @@ export default function ParentProfileCard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Function to open device gallery
+  // Allows user to select and crop a profile image
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
