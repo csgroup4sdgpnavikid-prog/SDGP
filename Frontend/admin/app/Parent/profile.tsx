@@ -79,6 +79,8 @@ export default function ParentProfileCard() {
     setConfirmPassword("");
   };
 
+  // Render parent profile interface
+  // Includes profile card, editable inputs, and password section
   return (
     <ScrollView style={styles.screen}>
       <TouchableOpacity
