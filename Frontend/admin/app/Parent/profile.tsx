@@ -59,6 +59,7 @@ export default function ParentProfileCard() {
       return;
     }
 
+    // Password must be at least 6 characters for security
     if (newPassword.length < 6) {
       setError("New password must be at least 6 characters.");
       return;
