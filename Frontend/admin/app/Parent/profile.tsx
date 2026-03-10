@@ -192,6 +192,7 @@ export default function ParentProfileCard() {
           />
         </View>
 
+        {/* Button to submit password update */}
         {/* Confirm Password */}
         <Text style={styles.labelInput5}>Confirm Password</Text>
         <View style={styles.inputBox5}>
