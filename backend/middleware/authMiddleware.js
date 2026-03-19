@@ -1,50 +1,55 @@
-// middleware/authMiddleware.js - Authentication middleware
-const { db } = require('../config/firebase');
-const { COLLECTIONS } = require('../utils/constants');
+// middleware/authMiddleware.js - Firebase ID token verification
+const { admin } = require('../config/firebase');
 
 /**
- * Verify user token (placeholder - implement with Firebase Auth in production)
- * For now, this just checks if userId exists in the request
+ * Verify Firebase ID token from Authorization header.
+ * Attaches decoded uid + role to req.user.
+ * Also enforces email verification — unverified accounts are rejected.
+ *
+ * Client must send:  Authorization: Bearer <firebaseIdToken>
  */
 const verifyToken = async (req, res, next) => {
-    const userId = req.headers['x-user-id'] || req.body.userId || req.query.userId;
-    const role = req.headers['x-user-role'] || req.body.role || req.query.role;
-
-    if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized: Missing or invalid Authorization header.' });
     }
 
+    const idToken = authHeader.split('Bearer ')[1];
+
     try {
-        // In production, verify Firebase ID token here
-        // const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const decoded = await admin.auth().verifyIdToken(idToken);
 
-        // For now, just attach userId to request
-        req.userId = userId;
-        req.userRole = role;
-
+        req.user = {
+            uid: decoded.uid,
+            email: decoded.email,
+            role: decoded.role || null,  // role must come from Firebase custom claims only
+        };
         next();
-    } catch (error) {
-        console.error('Auth error:', error);
-        res.status(401).json({ error: 'Unauthorized', details: error.message });
+    } catch (err) {
+        console.error('[authMiddleware] Token verification failed:', err.message);
+        const expired = err.code === 'auth/id-token-expired';
+        res.status(401).json({
+            error: expired ? 'Session expired. Please log in again.' : 'Unauthorized: Invalid token.',
+        });
     }
 };
 
 /**
- * Optional authentication - doesn't fail if no auth provided
+ * Optional auth — attaches user if token present, but does NOT block if missing.
+ * Use on endpoints that behave differently for authenticated vs anonymous users.
  */
 const optionalAuth = async (req, res, next) => {
-    const userId = req.headers['x-user-id'] || req.body.userId || req.query.userId;
-    const role = req.headers['x-user-role'] || req.body.role || req.query.role;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
 
-    if (userId) {
-        req.userId = userId;
-        req.userRole = role;
+    const idToken = authHeader.split('Bearer ')[1];
+    try {
+        const decoded = await admin.auth().verifyIdToken(idToken);
+        req.user = { uid: decoded.uid, email: decoded.email };
+    } catch {
+        // Invalid token — treat as unauthenticated
     }
-
     next();
 };
 
-module.exports = {
-    verifyToken,
-    optionalAuth,
-};
+module.exports = { verifyToken, optionalAuth };

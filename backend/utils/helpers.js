@@ -15,7 +15,7 @@ const capitalizeFirst = (str) => {
  * @returns {string} - Unique ID
  */
 const generateUniqueId = () => {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return require('crypto').randomUUID();
 };
 
 /**

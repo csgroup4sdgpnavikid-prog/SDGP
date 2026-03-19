@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, Alert,
   KeyboardAvoidingView, Platform, KeyboardTypeOptions,
@@ -9,6 +9,10 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { User, Settings, LogOut, Edit3, Save, X, Camera } from "lucide-react-native";
+import { useAuth } from "../../context/AuthContext";
+import { db, auth, storage } from "../../firebaseConfig";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 interface ProfileData {
   name: string;
@@ -35,24 +39,63 @@ interface ProfileFieldProps {
 export default function DriverProfile() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  const [isActive, setIsActive] = useState(false);
 
   const [profile, setProfile] = useState<ProfileData>({
-    name: "Alex Rodriguez",
-    email: "alex.rodriguez@email.com",
-    phone: "(555) 123-4567",
-    address: "123 Main Street, Springfield, IL 62701",
-    licenseNumber: "DL123456789",
-    vanModel: "2020 Ford Transit",
-    vanPlate: "VAN-123",
-    startDate: "2022-09-15",
-    emergencyContact: "Maria Rodriguez",
-    emergencyPhone: "(555) 987-6543",
+    name: "", email: "", phone: "", address: "",
+    licenseNumber: "", vanModel: "", vanPlate: "",
+    startDate: "", emergencyContact: "", emergencyPhone: "",
   });
 
   const [editedProfile, setEditedProfile] = useState<ProfileData>(profile);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        if (!auth.currentUser) return;
+        const snap = await getDoc(doc(db, "drivers", auth.currentUser.uid));
+        if (snap.exists()) {
+          const d = snap.data();
+          const loaded: ProfileData = {
+            name: d.name || "",
+            email: d.email || "",
+            phone: d.phone || "",
+            address: d.address || "",
+            licenseNumber: d.licenseNumber || "",
+            vanModel: d.vanModel || "",
+            vanPlate: d.vehicleNumber || "",
+            startDate: d.createdAt ? d.createdAt.split("T")[0] : "",
+            emergencyContact: d.emergencyContact || "",
+            emergencyPhone: d.emergencyPhone || "",
+          };
+          setProfile(loaded);
+          setEditedProfile(loaded);
+          setIsActive(d.isActive === true);
+          if (d.photoUrl) setProfileImage(d.photoUrl);
+        }
+      } catch (err) {
+        console.error("Error loading driver profile:", err);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    loadProfile();
+  }, []);
+
+  const uploadImageToStorage = async (localUri: string): Promise<string> => {
+    const uid = auth.currentUser!.uid;
+    const storageRef = ref(storage, `profileImages/drivers/${uid}`);
+    const response = await fetch(localUri);
+    const blob = await response.blob();
+    await uploadBytes(storageRef, blob);
+    return getDownloadURL(storageRef);
+  };
 
   const pickImage = async () => {
     try {
@@ -66,12 +109,19 @@ export default function DriverProfile() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 1,
+        quality: 0.8,
       });
-      if (!result.canceled) setProfileImage(result.assets[0].uri);
+      if (!result.canceled) {
+        const localUri = result.assets[0].uri;
+        setProfileImage(localUri); // show immediately in UI
+        const downloadUrl = await uploadImageToStorage(localUri);
+        // Persist to Firestore straight away (no need to wait for Save)
+        await updateDoc(doc(db, "drivers", auth.currentUser!.uid), { photoUrl: downloadUrl });
+        setProfileImage(downloadUrl);
+      }
     } catch (error) {
-      Alert.alert("Error", "Failed to pick image. Please try again.");
-      console.error("Image picker error:", error);
+      Alert.alert("Error", "Failed to upload photo. Please try again.");
+      console.error("Image upload error:", error);
     } finally {
       setIsLoadingImage(false);
     }
@@ -84,11 +134,24 @@ export default function DriverProfile() {
     return true;
   };
 
-  const handleSave = () => {
-    if (validateProfile()) {
+  const handleSave = async () => {
+    if (!validateProfile()) return;
+    try {
+      await updateDoc(doc(db, "drivers", auth.currentUser!.uid), {
+        name: editedProfile.name,
+        phone: editedProfile.phone,
+        address: editedProfile.address,
+        licenseNumber: editedProfile.licenseNumber,
+        vanModel: editedProfile.vanModel,
+        vehicleNumber: editedProfile.vanPlate,
+        emergencyContact: editedProfile.emergencyContact,
+        emergencyPhone: editedProfile.emergencyPhone,
+      });
       setProfile(editedProfile);
       setIsEditing(false);
       Alert.alert("Success", "Profile updated successfully!");
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to save profile");
     }
   };
 
@@ -102,7 +165,10 @@ export default function DriverProfile() {
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Sign Out", style: "destructive", onPress: () => { router.replace("/(auth)/DriverLogin"); } },
+      { text: "Sign Out", style: "destructive", onPress: async () => {
+        await logout();
+        router.replace("/(auth)/DriverLogin");
+      }},
     ]);
   };
 
@@ -182,7 +248,7 @@ export default function DriverProfile() {
           <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", color: "#111827", marginBottom: 16 }}>Personal Information</Text>
             <ProfileField label="Full Name" value={profile.name} fieldKey="name" />
-            <ProfileField label="Email Address" value={profile.email} fieldKey="email" keyboardType="email-address" />
+            <ProfileField label="Email Address" value={profile.email} fieldKey="email" keyboardType="email-address" editable={false} />
             <ProfileField label="Phone Number" value={profile.phone} fieldKey="phone" keyboardType="phone-pad" />
             <ProfileField label="Home Address" value={profile.address} fieldKey="address" multiline />
           </View>
@@ -206,8 +272,8 @@ export default function DriverProfile() {
             <View style={{ marginBottom: 16 }}>
               <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6, fontWeight: "500" }}>Employment Status</Text>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#10B981", marginRight: 8 }} />
-                <Text style={{ fontSize: 16, color: "#111827" }}>Active</Text>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isActive ? "#10B981" : "#9CA3AF", marginRight: 8 }} />
+                <Text style={{ fontSize: 16, color: "#111827" }}>{isActive ? "Active" : "Inactive"}</Text>
               </View>
             </View>
           </View>

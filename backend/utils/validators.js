@@ -8,7 +8,7 @@ const { ROLES } = require('./constants');
  * @returns {Object} - { isValid: boolean, missingFields: Array }
  */
 const validateRequiredFields = (body, requiredFields) => {
-    const missingFields = requiredFields.filter(field => !body[field]);
+    const missingFields = requiredFields.filter(field => body[field] === undefined || body[field] === null || body[field] === '');
     return {
         isValid: missingFields.length === 0,
         missingFields,

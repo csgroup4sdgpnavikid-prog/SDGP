@@ -66,6 +66,20 @@ export default function TabLayout() {
           ),
         }}
       />
+      {/* Track Van */}
+      <Tabs.Screen
+        name="LiveVanLocation"
+        options={{
+          title: "Track Van",
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "location" : "location-outline"}
+              color={color}
+              size={24}
+            />
+          ),
+        }}
+      />
       {/* Rate Driver */}
       <Tabs.Screen
         name="RateDriver"
@@ -94,6 +108,10 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* Hidden screens */}
+      <Tabs.Screen name="Settings" options={{ href: null }} />
+      <Tabs.Screen name="PaymentStatus" options={{ href: null }} />
     </Tabs>
   );
 }

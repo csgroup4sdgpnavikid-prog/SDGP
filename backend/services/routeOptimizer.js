@@ -1,4 +1,6 @@
 // services/routeOptimizer.js - Route optimization for absence handling
+const { Worker } = require('worker_threads');
+const path = require('path');
 const { db } = require('../config/firebase');
 const { COLLECTIONS } = require('../utils/constants');
 const { calculateDistance } = require('../utils/helpers');
@@ -14,48 +16,26 @@ const removeAbsentStops = (stops, absentChildIds) => {
 };
 
 /**
- * Reorder stops to minimize total distance (simple nearest neighbor algorithm)
+ * Reorder stops to minimize total distance (nearest-neighbour).
+ * Runs in a worker thread to avoid blocking the event loop.
  * @param {Array} stops - Array of stop objects with location
  * @param {Object} startLocation - Starting location { latitude, longitude }
- * @returns {Array} - Reordered stops
+ * @returns {Promise<Array>} - Reordered stops
  */
 const optimizeStopOrder = (stops, startLocation) => {
-    if (stops.length <= 1) return stops;
+    if (stops.length <= 1) return Promise.resolve(stops);
 
-    const optimized = [];
-    const remaining = [...stops];
-    let currentLocation = startLocation;
-
-    while (remaining.length > 0) {
-        // Find nearest stop
-        let nearestIndex = 0;
-        let nearestDistance = Infinity;
-
-        for (let i = 0; i < remaining.length; i++) {
-            const distance = calculateDistance(
-                currentLocation.latitude,
-                currentLocation.longitude,
-                remaining[i].location.latitude,
-                remaining[i].location.longitude
-            );
-
-            if (distance < nearestDistance) {
-                nearestDistance = distance;
-                nearestIndex = i;
-            }
-        }
-
-        // Add nearest to optimized route
-        const nearest = remaining.splice(nearestIndex, 1)[0];
-        optimized.push(nearest);
-        currentLocation = nearest.location;
-    }
-
-    // Update order property
-    return optimized.map((stop, index) => ({
-        ...stop,
-        order: index,
-    }));
+    return new Promise((resolve, reject) => {
+        const worker = new Worker(
+            path.join(__dirname, '../workers/routeOptimizerWorker.js'),
+            { workerData: { stops, startLocation } }
+        );
+        worker.once('message', resolve);
+        worker.once('error', reject);
+        worker.once('exit', (code) => {
+            if (code !== 0) reject(new Error(`Route optimizer worker exited with code ${code}`));
+        });
+    });
 };
 
 /**
@@ -75,6 +55,7 @@ const getTodaysAbsences = async (driverId, tripType) => {
         .where('driverId', '==', driverId)
         .where('date', '>=', today)
         .where('date', '<', tomorrow)
+        .where('status', '==', 'confirmed')  // only confirmed absences affect route
         .get();
 
     const absentChildIds = [];
@@ -111,8 +92,8 @@ const generateOptimizedRoute = async (driverId, allStops, startLocation, tripTyp
     const removedStops = allStops.filter(stop => absentChildIds.includes(stop.childId));
     const activeStops = removeAbsentStops(allStops, absentChildIds);
 
-    // Optimize the order of active stops
-    const optimizedStops = optimizeStopOrder(activeStops, startLocation);
+    // Optimize the order of active stops (runs in worker thread)
+    const optimizedStops = await optimizeStopOrder(activeStops, startLocation);
 
     // Calculate total distance
     let totalDistance = 0;

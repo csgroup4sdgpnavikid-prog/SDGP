@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Linking,
   ScrollView,
@@ -8,141 +9,222 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../../context/AuthContext";
+import { db } from "../../firebaseConfig";
+import { doc, getDoc, collection, getDocs, onSnapshot } from "firebase/firestore";
 
-import MapView, { Marker } from "react-native-maps";
+interface Child {
+  id: string;
+  name: string;
+  school: string;
+  grade: string;
+  isAbsent: boolean;
+}
+
+interface VanStatus {
+  isActive: boolean;
+  lat?: number;
+  lng?: number;
+  lastUpdated?: any;
+}
+
+interface ParentData {
+  name: string;
+  assignedDriverId: string | null;
+}
+
+interface DriverData {
+  name: string;
+  phone: string;
+}
 
 export default function HomeScreen() {
-  //Added driver call function(phone number static for now)
-  const driverPhoneNumber = "+94702920962";
-
-  const handleCallDriver = () => {
-    Linking.openURL(`tel:${driverPhoneNumber}`).catch(() =>
-      console.log("Unable to open dialer")
-    );
-  };
-
   const router = useRouter();
-  const [showMap, setShowMap] = useState(false);
+  const { user } = useAuth();
 
-  // ✅ Static van location (no animation)
-  const vanLocation = {
-    latitude: 6.9271,
-    longitude: 79.8612,
-  };
+  const [parentData, setParentData] = useState<ParentData | null>(null);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [vanStatus, setVanStatus] = useState<VanStatus>({ isActive: false });
+  const [driverData, setDriverData] = useState<DriverData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const now = new Date();
   const hour = now.getHours();
-  const greeting = () => {
-    if (hour >= 17) return "Good Evening";
-    if (hour >= 12) return "Good Afternoon";
-    return "Good Morning";
-  };
-
+  const greeting = hour >= 17 ? "Good Evening" : hour >= 12 ? "Good Afternoon" : "Good Morning";
   const todayDate = now.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+    weekday: "long", month: "short", day: "numeric", year: "numeric",
   });
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 20 }}
-    >
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>{greeting()}!</Text>
-            <Text style={styles.name}>Amana</Text>
-            <Text style={styles.date}>{todayDate}</Text>
-          </View>
+  useEffect(() => {
+    if (!user) return;
+    let unsubLocation: (() => void) | null = null;
 
-          <TouchableOpacity
-            style={styles.routeButton}
-            onPress={() => router.push("/Parent")}
-          >
-            <Text style={styles.routeButtonText}>Select the Route</Text>
-          </TouchableOpacity>
+    const loadData = async () => {
+      try {
+        // Load parent document
+        const parentSnap = await getDoc(doc(db, "parents", user.uid));
+        if (!parentSnap.exists()) return;
+
+        const pData = parentSnap.data() as ParentData;
+        setParentData(pData);
+
+        // Load children from subcollection
+        const childrenSnap = await getDocs(
+          collection(db, "parents", user.uid, "children")
+        );
+        setChildren(
+          childrenSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }))
+        );
+
+        // Load driver info + subscribe to van location
+        if (pData.assignedDriverId) {
+          const driverSnap = await getDoc(doc(db, "drivers", pData.assignedDriverId));
+          if (driverSnap.exists()) {
+            setDriverData(driverSnap.data() as DriverData);
+          }
+
+          // Real-time van location subscription
+          unsubLocation = onSnapshot(
+            doc(db, "locationRecords", pData.assignedDriverId),
+            (snap: any) => {
+              if (snap.exists()) {
+                setVanStatus(snap.data());
+              } else {
+                setVanStatus({ isActive: false });
+              }
+            }
+          );
+        }
+      } catch (err) {
+        console.error("Error loading parent home data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      if (unsubLocation) unsubLocation();
+    };
+  }, [user]);
+
+  const handleCallDriver = () => {
+    if (driverData?.phone) {
+      Linking.openURL(`tel:${driverData.phone}`).catch(() =>
+        console.log("Unable to open dialer")
+      );
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <Text style={{ color: "#6B7280" }}>Loading...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>{greeting}!</Text>
+          <Text style={styles.name}>{parentData?.name || "Parent"}</Text>
+          <Text style={styles.date}>{todayDate}</Text>
+        </View>
+      </View>
+
+      {/* Van Status Card */}
+      <View style={styles.vanCard}>
+        <View style={styles.vanCardHeader}>
+          <Text style={styles.vanTitle}>🚐 Van Status</Text>
+          <View style={[styles.statusBadge, vanStatus.isActive ? styles.activeBadge : styles.offlineBadge]}>
+            <View style={[styles.statusDot, vanStatus.isActive ? styles.activeDot : styles.offlineDot]} />
+            <Text style={[styles.statusText, vanStatus.isActive ? styles.activeText : styles.offlineText]}>
+              {vanStatus.isActive ? "On Trip" : "Offline"}
+            </Text>
+          </View>
         </View>
 
-        {/* Van Card */}
-        <View style={styles.vanCard}>
-          <Text style={styles.vanTitle}>🚐 Van is on the way!</Text>
-          <View style={styles.vanRow}>
-            <Text style={styles.vanLabel}>Estimated arrival</Text>
-            <View style={styles.vanTimeBadge}>
-              <Text style={styles.vanTimeText}>—</Text>
-            </View>
-          </View>
+        {vanStatus.isActive ? (
+          <Text style={styles.vanSubtext}>Van is currently on a trip</Text>
+        ) : (
+          <Text style={styles.vanSubtext}>Van is not currently active</Text>
+        )}
 
-          {/* Live Tracking Button */}
+        <View style={styles.vanActions}>
           <TouchableOpacity
             style={styles.liveButton}
-            onPress={() => setShowMap(!showMap)}
+            onPress={() => router.push("/Parent/LiveVanLocation")}
           >
-            <Text style={styles.liveButtonText}>
-              📍 {showMap ? "Hide Live Tracking" : "Show Live Tracking"}
-            </Text>
+            <Ionicons name="navigate-outline" size={16} color="#fff" />
+            <Text style={styles.liveButtonText}>Live Track</Text>
           </TouchableOpacity>
 
-          {/* Live tracking active badge*/}
-          {showMap && (
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveBadgeText}>Live Tracking Active</Text>
-            </View>
+          {driverData && (
+            <TouchableOpacity style={styles.callButton} onPress={handleCallDriver}>
+              <Ionicons name="call-outline" size={16} color="#000" />
+              <Text style={styles.callButtonText}>Call Driver</Text>
+            </TouchableOpacity>
           )}
+        </View>
+      </View>
 
-          {/* Map */}
-          {showMap && (
-            <MapView
-              style={styles.map}
-              initialRegion={{
-                latitude: vanLocation.latitude,
-                longitude: vanLocation.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
-              }}
-            >
-              <Marker coordinate={vanLocation}>
-                <View style={{ backgroundColor: "#1a237e", borderRadius: 20, padding: 6 }}>
-                  <Ionicons name="bus" size={24} color="#fff" />
-                </View>
-              </Marker>
-            </MapView>
-          )}
-
-          {/* Route Progress Timeline */}
-          <View style={styles.timelineContainer}>
-            <Text style={styles.timelineTitle}>Route Progress</Text>
-            <View style={styles.timelineRow}>
-              {/* School */}
-              <View style={styles.timelineStep}>
-                <View style={[styles.timelineDot, styles.completedDot]} />
-                <Text style={styles.timelineLabel}>School</Text>
+      {/* Children Today */}
+      {children.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Children</Text>
+          {children.map((child) => (
+            <View key={child.id} style={styles.childCard}>
+              <View style={styles.childInfo}>
+                <Text style={styles.childName}>{child.name}</Text>
+                <Text style={styles.childSchool}>{child.school}</Text>
               </View>
-
-              {/* Connector */}
-              <View style={styles.timelineConnector} />
-
-              {/* Home */}
-              <View style={styles.timelineStep}>
-                <View style={[styles.timelineDot, styles.pendingDot]} />
-                <Text style={styles.timelineLabel}>Home</Text>
+              <View style={[styles.attendanceBadge, child.isAbsent ? styles.absentBadge : styles.presentBadge]}>
+                <Text style={[styles.attendanceText, child.isAbsent ? styles.absentText : styles.presentText]}>
+                  {child.isAbsent ? "Absent" : "Present"}
+                </Text>
               </View>
             </View>
-          </View>
+          ))}
+        </View>
+      )}
 
-          {/* Call Driver Button */}
+      {/* Quick Actions */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.actionsGrid}>
           <TouchableOpacity
-            accessibilityLabel="Call the van driver"
-            style={styles.callButton}
-            onPress={handleCallDriver}
+            style={styles.actionCard}
+            onPress={() => router.push("/Parent/your_child")}
           >
-            <Text style={styles.callButtonText}>📞 Call Driver</Text>
+            <Ionicons name="calendar-outline" size={28} color="#5AA9E6" />
+            <Text style={styles.actionLabel}>Report Absence</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push("/Parent/ParentAlert")}
+          >
+            <Ionicons name="notifications-outline" size={28} color="#F59E0B" />
+            <Text style={styles.actionLabel}>Notifications</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push("/Parent/PaymentStatus")}
+          >
+            <Ionicons name="card-outline" size={28} color="#10B981" />
+            <Text style={styles.actionLabel}>Payment Status</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push("/Parent/RateDriver")}
+          >
+            <Ionicons name="star-outline" size={28} color="#8B5CF6" />
+            <Text style={styles.actionLabel}>Rate Driver</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -153,152 +235,130 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
-    paddingHorizontal: 20,
     backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: -70,
+    alignItems: "flex-start",
+    marginBottom: 20,
   },
-  greeting: { fontSize: 18, color: "#374151" },
-  name: { fontSize: 28, fontWeight: "bold", color: "#000" },
-  date: { fontSize: 14, color: "#666" },
-  routeButton: {
-    backgroundColor: "#fff3a0",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#000",
-  },
-  routeButtonText: { fontWeight: "600", color: "#000", fontSize: 14 },
+  greeting: { fontSize: 16, color: "#374151" },
+  name: { fontSize: 24, fontWeight: "bold", color: "#000" },
+  date: { fontSize: 13, color: "#6B7280", marginTop: 2 },
   vanCard: {
     backgroundColor: "#FFF8CC",
-    marginTop: 30,
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E5D98A",
+    marginBottom: 20,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 3,
   },
-  vanTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#000",
-  },
-  vanRow: {
+  vanCardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 20,
+    marginBottom: 8,
   },
-  vanLabel: { fontSize: 14, color: "#555" },
-  vanTimeBadge: {
-    backgroundColor: "#DCFCE7",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-  },
-  vanMarker: {
-    width: 40,
-    height: 40,
-  },
-  vanTimeText: { color: "#166534", fontWeight: "600", fontSize: 13 },
-  liveButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 6,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  liveButtonText: { color: "#fff", fontWeight: "600" },
-  map: {
-    width: "100%",
-    height: 400,
-    marginTop: 20,
-    borderRadius: 12,
-  },
-  liveBadge: {
+  vanTitle: { fontSize: 17, fontWeight: "700", color: "#000" },
+  statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "center",
-    marginTop: 10,
-    backgroundColor: "#ECFDF5",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#34D399",
+    gap: 5,
   },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#22C55E",
-    marginRight: 8,
-  },
-  liveBadgeText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#065F46",
-  },
-  callButton: {
-    marginTop: 20,
-    backgroundColor: "#60A5FA",
-    paddingVertical: 12,
-    borderRadius: 10,
+  activeBadge: { backgroundColor: "#DCFCE7", borderWidth: 1, borderColor: "#34D399" },
+  offlineBadge: { backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: "#D1D5DB" },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  activeDot: { backgroundColor: "#22C55E" },
+  offlineDot: { backgroundColor: "#9CA3AF" },
+  statusText: { fontSize: 12, fontWeight: "600" },
+  activeText: { color: "#065F46" },
+  offlineText: { color: "#6B7280" },
+  vanSubtext: { fontSize: 13, color: "#555", marginBottom: 12 },
+  vanActions: { flexDirection: "row", gap: 10 },
+  liveButton: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 5,
+    backgroundColor: "#5AA9E6",
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 8,
   },
-  callButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000",
+  liveButtonText: { color: "#fff", fontWeight: "600", fontSize: 13 },
+  callButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#E5E7EB",
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 8,
   },
+  callButtonText: { color: "#000", fontWeight: "600", fontSize: 13 },
 
-  // Timeline styles
-  timelineContainer: {
-    marginTop: 20,
-  },
-  timelineTitle: {
+  section: { marginBottom: 20 },
+  sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 12,
-    color: "#1F2937",
+    color: "#111827",
+    marginBottom: 10,
   },
-  timelineRow: {
+
+  childCard: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
-  timelineStep: {
-    alignItems: "center",
+  childInfo: { flex: 1 },
+  childName: { fontSize: 15, fontWeight: "600", color: "#111827" },
+  childSchool: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+  attendanceBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+  },
+  presentBadge: { backgroundColor: "#DCFCE7" },
+  absentBadge: { backgroundColor: "#FEF2F2" },
+  attendanceText: { fontSize: 12, fontWeight: "600" },
+  presentText: { color: "#065F46" },
+  absentText: { color: "#991B1B" },
+
+  actionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  actionCard: {
     flex: 1,
+    minWidth: "45%",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
-  timelineDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginBottom: 4,
-  },
-  completedDot: {
-    backgroundColor: "#22C55E",
-  },
-  pendingDot: {
-    backgroundColor: "#D1D5DB",
-  },
-  timelineLabel: {
+  actionLabel: {
     fontSize: 12,
-    color: "#555",
-  },
-  timelineConnector: {
-    height: 2,
-    backgroundColor: "#A3A3A3",
-    flex: 1,
+    fontWeight: "600",
+    color: "#374151",
+    textAlign: "center",
   },
 });

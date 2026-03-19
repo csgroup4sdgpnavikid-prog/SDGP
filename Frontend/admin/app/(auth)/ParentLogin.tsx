@@ -11,19 +11,47 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { moderateScale, wp, CONTENT_MAX_WIDTH } from "../../constants/responsive";
 
 export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth();
+
+  const handleLogin = async () => {
+    if (!email || !password) { setError('Please fill in all fields'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      await login(email, password, 'parent');
+      // Navigation handled by AuthContext auth guard
+    } catch (err: any) {
+      const code = err?.code || '';
+      if (code === 'auth/network-request-failed') {
+        setError('No internet connection. Check your network.');
+      } else if (code === 'auth/too-many-requests') {
+        setError('Too many failed attempts. Try again later.');
+      } else {
+        setError('Invalid email or password');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
      
-      <TouchableOpacity onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={24} color="#111827" />
+      <TouchableOpacity style={styles.backButton} onPress={() => router.push("/RoleSelectionScreen")}>
+        <Text style={styles.backText}>‹</Text>
       </TouchableOpacity>
 
       <View style={styles.container}>
+        <View style={{ width: "100%", maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" }}>
         <Text style={styles.title}>
           Welcome back! Glad{"\n"}to see you, Again!
         </Text>
@@ -59,12 +87,14 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        <TouchableOpacity onPress={() => router.push('/SendMail')}>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.loginButton}>
-          <Text style={styles.loginText}>Login</Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
+          <Text style={styles.loginText}>{loading ? 'Logging in...' : 'Login'}</Text>
         </TouchableOpacity>
 
         <View style={styles.orRow}>
@@ -101,6 +131,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -113,41 +144,41 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
-    marginLeft: 23,
-    marginTop: 40,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    marginLeft: wp(6),
+    marginTop: moderateScale(40),
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
     borderWidth: 1,
     borderColor: "#E5E7EB",
     justifyContent: "center",
     alignItems: "center",
   },
   backText: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: "600",
   },
 
   container: {
-    paddingHorizontal: 24,
-    marginTop: 30,
+    paddingHorizontal: wp(6),
+    marginTop: moderateScale(30),
   },
 
   title: {
-    fontSize: 26,
+    fontSize: moderateScale(26),
     fontWeight: "700",
-    marginBottom: 40,
+    marginBottom: moderateScale(40),
     color: "#111827",
   },
 
   input: {
-    height: 52,
+    height: moderateScale(52),
     borderWidth: 1,
     borderColor: "#5AA9E6",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    marginBottom: 18,
+    borderRadius: moderateScale(12),
+    paddingHorizontal: moderateScale(14),
+    fontSize: moderateScale(15),
+    marginBottom: moderateScale(18),
   },
 
   passwordContainer: {
@@ -155,44 +186,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#5AA9E6",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    height: 52,
+    borderRadius: moderateScale(12),
+    paddingHorizontal: moderateScale(14),
+    height: moderateScale(52),
   },
   passwordInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: moderateScale(15),
   },
 
   eyeText: {
-    fontSize: 18,
+    fontSize: moderateScale(18),
   },
 
   forgotText: {
     textAlign: "right",
     fontWeight: "600",
-    marginVertical: 14,
-    marginTop: 15,
+    marginVertical: moderateScale(14),
+    marginTop: moderateScale(15),
   },
 
   loginButton: {
-    height: 54,
-    borderRadius: 14,
+    height: moderateScale(54),
+    borderRadius: moderateScale(14),
     backgroundColor: "#5AA9E6",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 35,
+    marginBottom: moderateScale(35),
   },
   loginText: {
     color: "#0f0101ff",
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: "700",
   },
 
   orRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: moderateScale(20),
   },
 
   line: {
@@ -202,31 +233,31 @@ const styles = StyleSheet.create({
   },
 
   orText: {
-    marginHorizontal: 10,
+    marginHorizontal: moderateScale(10),
     color: "#6B7280",
-    fontSize: 13,
+    fontSize: moderateScale(13),
     fontWeight: "500",
   },
 
   socialRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: moderateScale(24),
   },
 
   socialButton: {
     flex: 1,
-    height: 52,
+    height: moderateScale(52),
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    borderRadius: 12,
+    borderRadius: moderateScale(12),
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 6,
+    marginHorizontal: moderateScale(6),
   },
 
   socialText: {
-    fontSize: 18,
+    fontSize: moderateScale(18),
     fontWeight: "700",
   },
 
@@ -242,6 +273,13 @@ const styles = StyleSheet.create({
   registerNow: {
     color: "#5AA9E6",
     fontWeight: "700",
+  },
+
+  errorText: {
+    color: '#EF4444',
+    fontSize: moderateScale(13),
+    marginBottom: moderateScale(10),
+    textAlign: 'center',
   },
 
 });

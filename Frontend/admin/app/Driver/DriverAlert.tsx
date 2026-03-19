@@ -4,7 +4,10 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
+import Constants from "expo-constants";
 import { getAuth } from "firebase/auth";
+import { API_BASE_URL } from "../../constants/api";
+import { moderateScale, wp } from "../../constants/responsive";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
  // adjusted path since had an error
 import { db } from "../../firebaseConfig";
@@ -16,12 +19,6 @@ interface QuickAlert {
     text: string;
     message: string;
 }
-
-//  IMPORTANT: Replace with PC's local IP 
-// Run `ipconfig` to get the ip
-
-const BACKEND_URL = "http://192.168.1.8:5000";
-// 
 
 // Configure how notifications should be handled when app is in the foreground
 Notifications.setNotificationHandler({
@@ -72,7 +69,6 @@ export default function DriverAlert() {
         const token = await registerForPushNotificationsAsync();
         if (token) {
             setExpoPushToken(token);
-            console.log("Expo Push Token:", token);
 
             // Save push token to Firestore so backend can reach this driver too
             if (currentUser) {
@@ -80,7 +76,6 @@ export default function DriverAlert() {
                     await updateDoc(doc(db, "drivers", currentUser.uid), {
                         expoPushToken: token,
                     });
-                    console.log("✅ Driver push token saved to Firestore");
                 } catch (e) {
                     console.warn("Could not save driver token to Firestore:", e);
                 }
@@ -116,7 +111,8 @@ export default function DriverAlert() {
             
             try {
                 token = (await Notifications.getExpoPushTokenAsync({
-                    projectId: "7c01cf21-d0c7-4d53-a992-5d74bfde98f2",
+                    projectId: Constants.expoConfig?.extra?.eas?.projectId
+                        ?? Constants.easConfig?.projectId,
                 })).data;
             } catch (error) {
                 console.error("Error getting push token:", error);
@@ -151,11 +147,20 @@ export default function DriverAlert() {
         setIsSending(true);
 
         try {
+            // ── Get Firebase auth token (required by backend verifyToken middleware) ──
+            const auth = getAuth();
+            const idToken = await auth.currentUser?.getIdToken();
+            if (!idToken) {
+                Alert.alert("Auth Error", "Session expired. Please log in again.");
+                return;
+            }
+
             // ── Send to backend ─
-            const response = await fetch(`${BACKEND_URL}/api/sos/trigger`, {
+            const response = await fetch(`${API_BASE_URL}/api/sos/trigger`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${idToken}`,
                 },
                 body: JSON.stringify({
                     driverId: driverId,   // uses actual logged-in driver's UID
@@ -189,7 +194,7 @@ export default function DriverAlert() {
             console.error("Error sending alert:", error);
             Alert.alert(
                 "❌ Failed to Send",
-                `Could not reach the server.\n\nMake sure:\n• Backend is running (node server.js)\n• IP in BACKEND_URL is correct\n• Both devices on same WiFi\n\nError: ${error instanceof Error ? error.message : String(error)}`,
+                `Could not reach the server.\n\nMake sure:\n• Backend is running (node server.js)\n• Backend is on the same WiFi network\n• Both devices on same WiFi\n\nError: ${error instanceof Error ? error.message : String(error)}`,
                 [{ text: "OK" }]
             );
         } finally {
@@ -204,28 +209,28 @@ export default function DriverAlert() {
             <View
                 style={{
                     backgroundColor: "#fff",
-                    paddingTop: insets.top + 20,
-                    paddingHorizontal: 20,
-                    paddingBottom: 16,
+                    paddingTop: insets.top + moderateScale(20),
+                    paddingHorizontal: wp(5),
+                    paddingBottom: moderateScale(16),
                     borderBottomWidth: 1,
                     borderBottomColor: "#E5E7EB",
                 }}
             >
-                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>
+                <Text style={{ fontSize: moderateScale(24), fontWeight: "bold", color: "#111827" }}>
                     Send Parent Alert
                 </Text>
-                
-                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: moderateScale(8) }}>
                     <View
                         style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: 4,
+                            width: moderateScale(8),
+                            height: moderateScale(8),
+                            borderRadius: moderateScale(4),
                             backgroundColor: expoPushToken ? "#10B981" : "#EF4444",
-                            marginRight: 6,
+                            marginRight: moderateScale(6),
                         }}
                     />
-                    <Text style={{ fontSize: 14, color: "#6B7280" }}>
+                    <Text style={{ fontSize: moderateScale(14), color: "#6B7280" }}>
                         {expoPushToken ? "Connected to notification service" : "Not connected"}
                     </Text>
                 </View>
@@ -233,12 +238,12 @@ export default function DriverAlert() {
 
             <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
+                contentContainerStyle={{ paddingBottom: insets.bottom + moderateScale(100) }}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={{ padding: 20 }}>
-                    <Text style={{ fontSize: 22, fontWeight: "bold", color: "#111827", marginBottom: 20 }}>
-                        Quick Alerts    
+                <View style={{ padding: wp(5) }}>
+                    <Text style={{ fontSize: moderateScale(22), fontWeight: "bold", color: "#111827", marginBottom: moderateScale(20) }}>
+                        Quick Alerts
                     </Text>
 
                     <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>
@@ -253,37 +258,37 @@ export default function DriverAlert() {
                                     style={{
                                         width: "48%",
                                         backgroundColor: isSelected ? "#EFF6FF" : "#F3F4F6",
-                                        borderRadius: 16,
-                                        padding: 20,
-                                        marginBottom: 16,
+                                        borderRadius: moderateScale(16),
+                                        padding: moderateScale(20),
+                                        marginBottom: moderateScale(16),
                                         alignItems: "center",
                                         justifyContent: "center",
-                                        minHeight: 140,
+                                        minHeight: moderateScale(140),
                                         borderWidth: isSelected ? 2 : 0,
                                         borderColor: "#2563EB",
                                         opacity: isSending ? 0.5 : 1,
                                     }}
                                 >
-                                    <View style={{ marginBottom: 12 }}>
-                                        <Icon size={40} color="#2563EB" strokeWidth={2} />
-                                    </View>  
-                                    <Text style={{ fontSize: 15, fontWeight: "500", color: "#111827", textAlign: "center" }}>
+                                    <View style={{ marginBottom: moderateScale(12) }}>
+                                        <Icon size={moderateScale(40)} color="#2563EB" strokeWidth={2} />
+                                    </View>
+                                    <Text style={{ fontSize: moderateScale(15), fontWeight: "500", color: "#111827", textAlign: "center" }}>
                                         {alert.text}
-                                    </Text>  
-                                </TouchableOpacity>          
+                                    </Text>
+                                </TouchableOpacity>
                             );
                         })}
-                    </View>    
+                    </View>
 
-                    <View style={{ marginTop: 24 }}>
-                        <Text style={{ fontSize: 16, color: "#111827", marginBottom: 12, fontWeight: "500" }}>
+                    <View style={{ marginTop: moderateScale(24) }}>
+                        <Text style={{ fontSize: moderateScale(16), color: "#111827", marginBottom: moderateScale(12), fontWeight: "500" }}>
                             Type a custom message below.
                         </Text>
 
-                        <View style={{ backgroundColor: "#F3F4F6", borderRadius: 12, padding: 16, minHeight: 120 }}>
+                        <View style={{ backgroundColor: "#F3F4F6", borderRadius: moderateScale(12), padding: moderateScale(16), minHeight: moderateScale(120) }}>
                             <TextInput
-                                style={{ fontSize: 15, color: "#111827", flex: 1, textAlignVertical: "top" }}
-                                placeholder="Detour due to closure on street."
+                                style={{ fontSize: moderateScale(15), color: "#111827", flex: 1, textAlignVertical: "top" }}
+                                placeholder="Custom Message."
                                 placeholderTextColor="#9CA3AF"
                                 multiline
                                 maxLength={maxLength}
@@ -294,53 +299,38 @@ export default function DriverAlert() {
                                     if (text.trim()) setSelectedAlert(null);
                                 }}
                             />
-                            <Text style={{ fontSize: 14, color: "#6B7280", textAlign: "right", marginTop: 8 }}>
+                            <Text style={{ fontSize: moderateScale(14), color: "#6B7280", textAlign: "right", marginTop: moderateScale(8) }}>
                                 {customMessage.length}/{maxLength}
                             </Text>
                         </View>
                     </View>
 
-                    {/* Info Box */}
-                    <View
-                        style={{
-                            backgroundColor: "#EFF6FF",
-                            borderRadius: 12,
-                            padding: 16,
-                            marginTop: 20,
-                            borderLeftWidth: 4,
-                            borderLeftColor: "#2563EB",
-                        }}
-                    >
-                        <Text style={{ fontSize: 14, color: "#1E40AF", lineHeight: 20 }}>
-                            <Text style={{ fontWeight: "600" }}>ℹ️ Note: </Text>
-                            Alert will be sent to all parents linked to your driver account via the backend server.
-                        </Text>
-                    </View>
+
                 </View>
             </ScrollView>
 
             {/* Send alert button */}
-            <View 
+            <View
                 style={{
                     position: "absolute",
                     bottom: 0,
                     left: 0,
                     right: 0,
                     backgroundColor: "#fff",
-                    paddingHorizontal: 20,
-                    paddingTop: 16,
-                    paddingBottom: insets.bottom + 16,
+                    paddingHorizontal: wp(5),
+                    paddingTop: moderateScale(16),
+                    paddingBottom: insets.bottom + moderateScale(16),
                     borderTopWidth: 1,
                     borderTopColor: "#E5E7EB",
-                }}        
+                }}
             >
                 <TouchableOpacity
                     onPress={handleSendAlert}
                     disabled={isSending}
                     style={{
                         backgroundColor: isSending ? "#9CA3AF" : "#2563EB",
-                        borderRadius: 12,
-                        paddingVertical: 16,
+                        borderRadius: moderateScale(12),
+                        paddingVertical: moderateScale(16),
                         alignItems: "center",
                         shadowColor: "#000",
                         shadowOffset: { width: 0, height: 2 },
@@ -349,15 +339,15 @@ export default function DriverAlert() {
                         elevation: 3,
                         flexDirection: "row",
                         justifyContent: "center",
-                    }}    
+                    }}
                 >
                     {isSending ? (
                         <>
-                            <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
-                            <Text style={{ color: "#fff", fontSize: 17, fontWeight: "bold" }}>Sending...</Text>
+                            <ActivityIndicator color="#fff" style={{ marginRight: moderateScale(8) }} />
+                            <Text style={{ color: "#fff", fontSize: moderateScale(17), fontWeight: "bold" }}>Sending...</Text>
                         </>
                     ) : (
-                        <Text style={{ color: "#fff", fontSize: 17, fontWeight: "bold" }}>Send Alert</Text>
+                        <Text style={{ color: "#fff", fontSize: moderateScale(17), fontWeight: "bold" }}>Send Alert</Text>
                     )}
                 </TouchableOpacity>
             </View>

@@ -1,21 +1,79 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
+  Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { logout, updateUserEmail, updateUserPassword } = useAuth();
   const [openSection, setOpenSection] = React.useState<string | null>(null);
+
+  // Email modal state
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+
+  // Password modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  // Notification preferences state
+  const [showNotifModal, setShowNotifModal] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState({
+    tripAlerts: true,
+    sosAlerts: true,
+    paymentAlerts: true,
+    proximityAlerts: true,
+  });
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
+  };
+
+  const handleChangeEmail = async () => {
+    setEmailError("");
+    if (!newEmail || !newEmail.includes("@")) { setEmailError("Enter a valid email"); return; }
+    try {
+      await updateUserEmail(newEmail);
+      Alert.alert("Check your inbox", `A verification link was sent to ${newEmail}. Your email will update after you click it.`);
+      setShowEmailModal(false);
+      setNewEmail("");
+    } catch (err: any) {
+      setEmailError(err.message || "Failed to update email");
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError("");
+    if (!currentPassword || !newPassword || !confirmNewPassword) { setPasswordError("All fields are required"); return; }
+    if (newPassword !== confirmNewPassword) { setPasswordError("Passwords do not match"); return; }
+    if (newPassword.length < 6) { setPasswordError("Minimum 6 characters"); return; }
+    try {
+      await updateUserPassword(currentPassword, newPassword);
+      Alert.alert("Success", "Password updated.");
+      setShowPasswordModal(false);
+      setCurrentPassword(""); setNewPassword(""); setConfirmNewPassword("");
+    } catch (err: any) {
+      if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+        setPasswordError("Current password is incorrect");
+      } else {
+        setPasswordError(err.message || "Failed to update password");
+      }
+    }
   };
 
   return (
@@ -31,13 +89,23 @@ export default function SettingsScreen() {
         <SettingItem
           icon="person-outline"
           label="Edit Profile"
-          onPress={() => router.push("/Parent/profile")}
+          onPress={() => router.push("/Driver/DriverProfile")}
+        />
+        <SettingItem
+          icon="mail-outline"
+          label="Change Email"
+          onPress={() => { setNewEmail(""); setEmailError(""); setShowEmailModal(true); }}
+        />
+        <SettingItem
+          icon="lock-closed-outline"
+          label="Change Password"
+          onPress={() => { setCurrentPassword(""); setNewPassword(""); setConfirmNewPassword(""); setPasswordError(""); setShowPasswordModal(true); }}
         />
 
         <SettingItem
           icon="card-outline"
           label="Payment & Bank Details"
-          onPress={() => {}}
+          onPress={() => router.push("/Driver/Payment")}
         />
 
         <Text style={styles.sectionTitle}>App Preferences</Text>
@@ -45,9 +113,7 @@ export default function SettingsScreen() {
         <SettingItem
           icon="notifications-outline"
           label="Notification Preferences"
-          onPress={() => {}}
-          showBadge={true}
-          badgeCount="1"
+          onPress={() => setShowNotifModal(true)}
         />
 
         <SettingItem
@@ -165,15 +231,100 @@ export default function SettingsScreen() {
         {/* Logout */}
         <TouchableOpacity
           style={styles.logoutButton}
-          onPress={() => {
-            //Handle logout logic here
-            console.log("Logout pressed");
+          onPress={async () => {
+            await logout();
+            router.replace("/RoleSelectionScreen");
           }}
         >
           <Ionicons name="log-out-outline" size={20} color="#f1e9e9" />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Change Email Modal */}
+      <Modal visible={showEmailModal} transparent animationType="slide" onRequestClose={() => setShowEmailModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Change Email</Text>
+            <Text style={styles.modalSub}>A verification link will be sent to the new address.</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="New email address"
+              value={newEmail}
+              onChangeText={setNewEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {emailError ? <Text style={styles.modalError}>{emailError}</Text> : null}
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setShowEmailModal(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirm} onPress={handleChangeEmail}>
+                <Text style={styles.modalConfirmText}>Send Link</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Notification Preferences Modal */}
+      <Modal visible={showNotifModal} transparent animationType="slide" onRequestClose={() => setShowNotifModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Notification Preferences</Text>
+            <Text style={styles.modalSub}>Choose which alerts you want to receive.</Text>
+            {([
+              { key: "tripAlerts", label: "Trip start / end alerts" },
+              { key: "sosAlerts", label: "Emergency SOS alerts" },
+              { key: "paymentAlerts", label: "Payment confirmations" },
+              { key: "proximityAlerts", label: "Van approaching (500m)" },
+            ] as const).map(({ key, label }) => (
+              <TouchableOpacity
+                key={key}
+                style={styles.notifRow}
+                onPress={() => setNotifPrefs((prev) => ({ ...prev, [key]: !prev[key] }))}
+              >
+                <Text style={styles.notifLabel}>{label}</Text>
+                <Ionicons
+                  name={notifPrefs[key] ? "checkmark-circle" : "ellipse-outline"}
+                  size={22}
+                  color={notifPrefs[key] ? "#5AA9E6" : "#9CA3AF"}
+                />
+              </TouchableOpacity>
+            ))}
+            <View style={[styles.modalActions, { marginTop: 16 }]}>
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setShowNotifModal(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirm} onPress={() => setShowNotifModal(false)}>
+                <Text style={styles.modalConfirmText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Change Password Modal */}
+      <Modal visible={showPasswordModal} transparent animationType="slide" onRequestClose={() => setShowPasswordModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Change Password</Text>
+            <TextInput style={styles.modalInput} placeholder="Current password" value={currentPassword} onChangeText={setCurrentPassword} secureTextEntry />
+            <TextInput style={styles.modalInput} placeholder="New password" value={newPassword} onChangeText={setNewPassword} secureTextEntry />
+            <TextInput style={styles.modalInput} placeholder="Confirm new password" value={confirmNewPassword} onChangeText={setConfirmNewPassword} secureTextEntry />
+            {passwordError ? <Text style={styles.modalError}>{passwordError}</Text> : null}
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setShowPasswordModal(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirm} onPress={handleChangePassword}>
+                <Text style={styles.modalConfirmText}>Update</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -274,6 +425,47 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     lineHeight: 20,
   },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 36,
+  },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: "#111827", marginBottom: 4 },
+  modalSub: { fontSize: 13, color: "#6B7280", marginBottom: 16 },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 15,
+    marginBottom: 12,
+    backgroundColor: "#F9FAFB",
+  },
+  modalError: { color: "#EF4444", fontSize: 13, marginBottom: 8 },
+  modalActions: { flexDirection: "row", gap: 10, marginTop: 4 },
+  modalCancel: {
+    flex: 1, paddingVertical: 12, borderRadius: 10,
+    borderWidth: 1, borderColor: "#E5E7EB", alignItems: "center",
+  },
+  modalCancelText: { color: "#6B7280", fontWeight: "600" },
+  modalConfirm: {
+    flex: 2, paddingVertical: 12, borderRadius: 10,
+    backgroundColor: "#5AA9E6", alignItems: "center",
+  },
+  modalConfirmText: { color: "#fff", fontWeight: "700" },
+  notifRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+  },
+  notifLabel: { fontSize: 15, color: "#111827" },
 });
 function SettingItem({
   icon,

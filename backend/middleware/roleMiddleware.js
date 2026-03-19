@@ -9,7 +9,7 @@ const requireRole = (allowedRoles) => {
     const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
     return (req, res, next) => {
-        const userRole = req.userRole;
+        const userRole = req.user?.role;
 
         if (!userRole) {
             return res.status(403).json({ error: 'Forbidden: Role not specified' });
@@ -40,9 +40,15 @@ const requireParent = requireRole(ROLES.PARENT);
  */
 const requireDriverOrParent = requireRole([ROLES.DRIVER, ROLES.PARENT]);
 
+/**
+ * Require admin role
+ */
+const requireAdmin = requireRole(ROLES.ADMIN);
+
 module.exports = {
     requireRole,
     requireDriver,
     requireParent,
     requireDriverOrParent,
+    requireAdmin,
 };

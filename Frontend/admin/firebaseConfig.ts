@@ -1,18 +1,19 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 // [NEW] Import Auth with Side Effect for Registration
 import 'firebase/auth'; // Ensure side-effects run
 import { initializeAuth, getAuth, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDJOtHU6FY4WosW_exH1q-CN6JyU0OmXZI",
-  authDomain: "navi-kid-school-van-tracker.firebaseapp.com",
-  projectId: "navi-kid-school-van-tracker",
-  storageBucket: "navi-kid-school-van-tracker.firebasestorage.app",
-  messagingSenderId: "997311667098",
-  appId: "1:997311667098:web:8074b1381220c37cbe7823",
-  measurementId: "G-8MP3BEFT1C"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY!,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID!,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID!,
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize App
@@ -35,4 +36,7 @@ try {
 // Initialize Firestore
 const db = getFirestore(app);
 
-export { app, auth, db };
+// Initialize Storage
+const storage = getStorage(app);
+
+export { app, auth, db, storage };

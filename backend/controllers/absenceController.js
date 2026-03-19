@@ -3,15 +3,31 @@ const { db, admin } = require('../config/firebase');
 const { COLLECTIONS, ABSENCE_TYPES } = require('../utils/constants');
 const { validateRequiredFields } = require('../utils/validators');
 
+/** Validate YYYY-MM-DD format and return a UTC Date at midnight, or null if invalid */
+function parseISODate(dateStr) {
+    if (typeof dateStr !== 'string') return null;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+}
+
+function todayUTC() {
+    const n = new Date();
+    return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate()));
+}
+
 /**
  * Mark child as absent
  * POST /api/absence/mark
  */
 const markAbsence = async (req, res) => {
-    const { parentId, childId, driverId, date, absenceType } = req.body;
+    const { childId, driverId, date, absenceType } = req.body;
+    // Always derive parentId from the verified token — never trust body
+    const parentId = req.user.uid;
 
     // Validate required fields
-    const validation = validateRequiredFields(req.body, ['parentId', 'childId', 'date', 'absenceType']);
+    const validation = validateRequiredFields(req.body, ['childId', 'date', 'absenceType']);
     if (!validation.isValid) {
         return res.status(400).json({
             error: `Missing required fields: ${validation.missingFields.join(', ')}`
@@ -25,22 +41,30 @@ const markAbsence = async (req, res) => {
         });
     }
 
+    // Validate and parse date as ISO YYYY-MM-DD (UTC midnight — timezone-safe)
+    const absenceDate = parseISODate(date);
+    if (!absenceDate) {
+        return res.status(400).json({ error: 'Invalid date. Must be ISO format: YYYY-MM-DD (e.g. 2024-03-18)' });
+    }
+
+    // Prevent marking absences for past dates
+    if (absenceDate < todayUTC()) {
+        return res.status(400).json({ error: 'Cannot mark absence for a past date.' });
+    }
+
     try {
-        // Verify parent owns this child (controlled access)
-        const childDoc = await db.collection(COLLECTIONS.CHILDREN).doc(childId).get();
+        // Children live at parents/{parentId}/children/{childId} — subcollection
+        // Ownership is guaranteed by the subcollection path (parentId is from the verified token)
+        const childDoc = await db.collection(COLLECTIONS.PARENTS).doc(parentId)
+            .collection('children').doc(childId).get();
         if (!childDoc.exists) {
             return res.status(404).json({ error: 'Child not found' });
         }
 
         const childData = childDoc.data();
-        if (childData.parentId !== parentId) {
-            return res.status(403).json({ error: 'Access denied. You can only mark absence for your own child.' });
-        }
 
         // Create absence record
         const absenceRef = db.collection(COLLECTIONS.ABSENCES).doc();
-        const absenceDate = new Date(date);
-        absenceDate.setHours(0, 0, 0, 0);
 
         const absenceData = {
             absenceId: absenceRef.id,
@@ -68,7 +92,7 @@ const markAbsence = async (req, res) => {
 
     } catch (error) {
         console.error('Error marking absence:', error);
-        res.status(500).json({ error: 'Failed to mark absence', details: error.message });
+        res.status(500).json({ error: 'Failed to mark absence' });
     }
 };
 
@@ -77,10 +101,12 @@ const markAbsence = async (req, res) => {
  * POST /api/absence/confirm
  */
 const confirmAbsence = async (req, res) => {
-    const { absenceId, parentId } = req.body;
+    const { absenceId } = req.body;
+    // Use token UID — never trust parentId from request body
+    const parentId = req.user.uid;
 
-    if (!absenceId || !parentId) {
-        return res.status(400).json({ error: 'Missing required fields: absenceId, parentId' });
+    if (!absenceId) {
+        return res.status(400).json({ error: 'Missing required field: absenceId' });
     }
 
     try {
@@ -93,7 +119,7 @@ const confirmAbsence = async (req, res) => {
 
         const absenceData = absenceDoc.data();
 
-        // Verify parent owns this absence
+        // Verify parent owns this absence (using token UID)
         if (absenceData.parentId !== parentId) {
             return res.status(403).json({ error: 'Access denied.' });
         }
@@ -102,11 +128,28 @@ const confirmAbsence = async (req, res) => {
             return res.status(400).json({ error: 'Absence already confirmed' });
         }
 
-        // Confirm the absence
-        await absenceRef.update({
+        // Prevent confirming absences for past dates
+        const absenceDate = absenceData.date?.toDate ? absenceData.date.toDate() : new Date(absenceData.date);
+        if (absenceDate < todayUTC()) {
+            return res.status(400).json({ error: 'Cannot confirm absence for a past date.' });
+        }
+
+        // Confirm the absence and update the child's isAbsent flag in the subcollection
+        const batch = db.batch();
+
+        batch.update(absenceRef, {
             status: 'confirmed',
             confirmedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+
+        // Update child.isAbsent so DriverMap and studentService see the flag immediately
+        if (absenceData.childId) {
+            const childRef = db.collection(COLLECTIONS.PARENTS).doc(parentId)
+                .collection('children').doc(absenceData.childId);
+            batch.update(childRef, { isAbsent: true });
+        }
+
+        await batch.commit();
 
         console.log(`Absence confirmed: ${absenceId}`);
 
@@ -118,106 +161,8 @@ const confirmAbsence = async (req, res) => {
 
     } catch (error) {
         console.error('Error confirming absence:', error);
-        res.status(500).json({ error: 'Failed to confirm absence', details: error.message });
+        res.status(500).json({ error: 'Failed to confirm absence' });
     }
 };
 
-/**
- * Cancel absence
- * POST /api/absence/cancel
- */
-const cancelAbsence = async (req, res) => {
-    const { absenceId, parentId } = req.body;
-
-    if (!absenceId || !parentId) {
-        return res.status(400).json({ error: 'Missing required fields: absenceId, parentId' });
-    }
-
-    try {
-        const absenceRef = db.collection(COLLECTIONS.ABSENCES).doc(absenceId);
-        const absenceDoc = await absenceRef.get();
-
-        if (!absenceDoc.exists) {
-            return res.status(404).json({ error: 'Absence record not found' });
-        }
-
-        const absenceData = absenceDoc.data();
-
-        // Verify parent owns this absence
-        if (absenceData.parentId !== parentId) {
-            return res.status(403).json({ error: 'Access denied.' });
-        }
-
-        // Update status to cancelled
-        await absenceRef.update({
-            status: 'cancelled',
-            cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-
-        console.log(`Absence cancelled: ${absenceId}`);
-
-        res.status(200).json({
-            success: true,
-            message: 'Absence cancelled.',
-            absenceId,
-        });
-
-    } catch (error) {
-        console.error('Error cancelling absence:', error);
-        res.status(500).json({ error: 'Failed to cancel absence', details: error.message });
-    }
-};
-
-/**
- * Get absences for a child
- * GET /api/absence/child/:childId
- */
-const getChildAbsences = async (req, res) => {
-    const { childId } = req.params;
-    const { parentId, startDate, endDate } = req.query;
-
-    if (!childId) {
-        return res.status(400).json({ error: 'Missing childId' });
-    }
-
-    try {
-        // Verify parent access if parentId provided
-        if (parentId) {
-            const childDoc = await db.collection(COLLECTIONS.CHILDREN).doc(childId).get();
-            if (childDoc.exists && childDoc.data().parentId !== parentId) {
-                return res.status(403).json({ error: 'Access denied.' });
-            }
-        }
-
-        let query = db.collection(COLLECTIONS.ABSENCES).where('childId', '==', childId);
-
-        // Add date filters if provided
-        if (startDate) {
-            const start = new Date(startDate);
-            start.setHours(0, 0, 0, 0);
-            query = query.where('date', '>=', start);
-        }
-
-        if (endDate) {
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59, 999);
-            query = query.where('date', '<=', end);
-        }
-
-        const absencesSnapshot = await query.orderBy('date', 'desc').get();
-        const absences = absencesSnapshot.docs.map(doc => doc.data());
-
-        res.status(200).json({ success: true, absences });
-
-    } catch (error) {
-        console.error('Error fetching absences:', error);
-        res.status(500).json({ error: 'Failed to fetch absences', details: error.message });
-    }
-};
-
-module.exports = {
-    markAbsence,
-    confirmAbsence,
-    cancelAbsence,
-    getChildAbsences,
-};
+module.exports = { markAbsence, confirmAbsence };

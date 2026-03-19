@@ -12,7 +12,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.admin",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "config": {
+        "googleMapsApiKey": "AIzaSyAtbPYMF9ak5WZYcT5SMum9yFQ5O0Z83K8"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +27,12 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.admin",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAtbPYMF9ak5WZYcT5SMum9yFQ5O0Z83K8"
+        }
+      }
     },
     "web": {
       "output": "static",

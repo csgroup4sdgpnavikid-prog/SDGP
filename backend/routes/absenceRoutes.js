@@ -1,23 +1,11 @@
-// routes/absenceRoutes.js - Absence management routes
+// routes/absenceRoutes.js
 const express = require('express');
 const router = express.Router();
-const {
-    markAbsence,
-    confirmAbsence,
-    cancelAbsence,
-    getChildAbsences
-} = require('../controllers/absenceController');
+const { markAbsence, confirmAbsence } = require('../controllers/absenceController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
-// POST /api/absence/mark - Mark child as absent
-router.post('/mark', markAbsence);
-
-// POST /api/absence/confirm - Confirm absence (double-check)
-router.post('/confirm', confirmAbsence);
-
-// POST /api/absence/cancel - Cancel absence
-router.post('/cancel', cancelAbsence);
-
-// GET /api/absence/child/:childId - Get absences for a child
-router.get('/child/:childId', getChildAbsences);
+// All absence routes require a valid Firebase ID token
+router.post('/mark',    verifyToken, markAbsence);
+router.post('/confirm', verifyToken, confirmAbsence);
 
 module.exports = router;

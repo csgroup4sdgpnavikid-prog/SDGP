@@ -1,27 +1,13 @@
-// routes/tripRoutes.js - Trip management routes
+// routes/tripRoutes.js
 const express = require('express');
 const router = express.Router();
-const {
-    handleStartTrip,
-    handleEndTrip,
-    getTripStatus,
-    getDriverActiveTrip,
-    handleUpdateStop
-} = require('../controllers/tripController');
+const { handleStartTrip, handleEndTrip, handleUpdateStop } = require('../controllers/tripController');
+const { verifyToken } = require('../middleware/authMiddleware');
+const { locationLimiter } = require('../middleware/rateLimitMiddleware');
 
-// POST /api/trips/start - Start a new trip
-router.post('/start', handleStartTrip);
-
-// POST /api/trips/end - End a trip
-router.post('/end', handleEndTrip);
-
-// GET /api/trips/status/:tripId - Get trip status
-router.get('/status/:tripId', getTripStatus);
-
-// GET /api/trips/active/:driverId - Get active trip for a driver
-router.get('/active/:driverId', getDriverActiveTrip);
-
-// POST /api/trips/update-stop - Update child pickup/dropoff status
-router.post('/update-stop', handleUpdateStop);
+// All trip routes require a valid Firebase ID token + per-IP rate limiting
+router.post('/start',       verifyToken, locationLimiter, handleStartTrip);
+router.post('/end',         verifyToken, locationLimiter, handleEndTrip);
+router.post('/update-stop', verifyToken, locationLimiter, handleUpdateStop);
 
 module.exports = router;

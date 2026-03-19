@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, ScrollView } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../../firebaseConfig"; // adjust path if needed
+import { moderateScale, wp } from "../../constants/responsive";
+import { collection, deleteDoc, doc, onSnapshot, query, where } from "firebase/firestore";
+import { db, auth } from "../../firebaseConfig";
 
 interface Notification {
   id: string;
@@ -11,62 +12,107 @@ interface Notification {
   message: string;
   read: boolean;
   timestamp?: string;
-  isLive?: boolean;
+  type?: string;
 }
 
 export default function AlertsScreen() {
-  const [liveAlerts, setLiveAlerts] = useState<Notification[]>([]);
+  const [alerts, setAlerts] = useState<Notification[]>([]);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  // Static default alerts
-  const staticAlerts: Notification[] = [
-    { id: "static-1", title: "Van Approaching!", message: "Van will arrive in 5 minutes.", read: false },
-    { id: "static-2", title: "Payment Reminder", message: "Please complete this month's payment.", read: false },
-    { id: "static-3", title: "Route Delay", message: "Delay due to heavy traffic.", read: true },
-    { id: "static-4", title: "Mechanical issue", message: "Delay due to mechanical issue.", read: true },
-  ];
-
-  const [staticNotifs, setStaticNotifs] = useState<Notification[]>(staticAlerts);
-
-  // ── Real-time Firestore listener (no orderBy = no index needed) ──────────
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "emergencyAlerts"), (snapshot) => {
-      const alerts: Notification[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        title: `🚐 Driver Alert`,
-        message: doc.data().message || "",
-        read: false,
-        timestamp: doc.data().timestamp,
-        isLive: true,
-      }));
-
-      // Sort by timestamp descending (newest first) — done client side
-      alerts.sort((a, b) => {
-        if (!a.timestamp || !b.timestamp) return 0;
-        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-      });
-
-      setLiveAlerts(alerts);
-      setLoading(false);
-    }, (error) => {
-      console.error("Firestore listener error:", error);
-      setLoading(false);
+  const mergeAndSort = (existing: Notification[], incoming: Notification[], keyPrefix: string) => {
+    const filtered = existing.filter((n) => !n.id.startsWith(keyPrefix));
+    return [...filtered, ...incoming].sort((a, b) => {
+      if (!a.timestamp || !b.timestamp) return 0;
+      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Combine: live alerts on top, static below
-  const allNotifications = [...liveAlerts, ...staticNotifs];
-
-  const markAllAsRead = () => {
-    setLiveAlerts(liveAlerts.map((n) => ({ ...n, read: true })));
-    setStaticNotifs(staticNotifs.map((n) => ({ ...n, read: true })));
   };
 
-  const markOneAsRead = (id: string) => {
-    setLiveAlerts(liveAlerts.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    setStaticNotifs(staticNotifs.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  useEffect(() => {
+    if (!auth.currentUser) { setLoading(false); return; }
+    const parentId = auth.currentUser.uid;
+
+    // Real-time SOS / emergency alerts (all drivers broadcast)
+    const sosUnsub = onSnapshot(
+      collection(db, "emergencyAlerts"),
+      (snapshot) => {
+        const sosAlerts: Notification[] = snapshot.docs.map((doc) => {
+          const d = doc.data();
+          const ts = d.createdAt
+            ? (typeof d.createdAt === "string" ? d.createdAt : d.createdAt.toDate?.().toISOString())
+            : undefined;
+          return {
+            id: `sos-${doc.id}`,
+            title: "🚨 Driver SOS Alert",
+            message: d.message || d.type || "Emergency alert from your driver",
+            read: false,
+            timestamp: ts,
+            type: "sos",
+          };
+        });
+        setAlerts((prev) => mergeAndSort(prev, sosAlerts, "sos-"));
+        setLoading(false);
+      },
+      (error) => { console.error("SOS listener error:", error); setLoading(false); }
+    );
+
+    // Push notification history for this parent
+    const notifUnsub = onSnapshot(
+      query(collection(db, "notifications"), where("recipientId", "==", parentId)),
+      (snapshot) => {
+        const notifs: Notification[] = snapshot.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: `notif-${doc.id}`,
+            title: d.title || "Notification",
+            message: d.body || "",
+            read: false,
+            timestamp: d.sentAt,
+            type: d.type || "push",
+          };
+        });
+        setAlerts((prev) => mergeAndSort(prev, notifs, "notif-"));
+      }
+    );
+
+    return () => { sosUnsub(); notifUnsub(); };
+  }, []);
+
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const allNotifications = alerts
+    .filter((n) => !n.timestamp || new Date(n.timestamp).getTime() >= sevenDaysAgo)
+    .map((n) => ({ ...n, read: readIds.has(n.id) }));
+
+  const markAllAsRead = () => setReadIds(new Set(alerts.map((n) => n.id)));
+  const markOneAsRead = (id: string) => setReadIds((prev) => new Set([...prev, id]));
+
+  const deleteAll = () => {
+    if (allNotifications.length === 0) return;
+    Alert.alert("Delete All Notifications", "Are you sure you want to delete all notifications?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete All",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const deletions = alerts.map((n) => {
+              if (n.id.startsWith("notif-")) {
+                return deleteDoc(doc(db, "notifications", n.id.replace("notif-", "")));
+              } else if (n.id.startsWith("sos-")) {
+                return deleteDoc(doc(db, "emergencyAlerts", n.id.replace("sos-", "")));
+              }
+              return Promise.resolve();
+            });
+            await Promise.all(deletions);
+            setAlerts([]);
+            setReadIds(new Set());
+          } catch (err) {
+            console.error("Failed to delete notifications:", err);
+            Alert.alert("Error", "Failed to delete some notifications.");
+          }
+        },
+      },
+    ]);
   };
 
   const now = new Date();
@@ -100,7 +146,10 @@ export default function AlertsScreen() {
         <Text style={styles.alertTitle}>
           Alerts{unreadCount > 0 ? <Text style={styles.unreadBadge}> · {unreadCount} new</Text> : null}
         </Text>
-        <Text style={styles.markReadText} onPress={markAllAsRead}>Mark all as read</Text>
+        <View style={{ flexDirection: "row", gap: 16 }}>
+          <Text style={styles.markReadText} onPress={markAllAsRead}>Mark all as read</Text>
+          <Text style={[styles.markReadText, { color: "#E53935" }]} onPress={deleteAll}>Delete All</Text>
+        </View>
       </View>
 
       {/* Loading */}
@@ -112,12 +161,18 @@ export default function AlertsScreen() {
       )}
 
       {/* Alert list */}
-      {!loading && (
+      {!loading && allNotifications.length === 0 && (
+        <View style={{ alignItems: "center", marginTop: 60 }}>
+          <Ionicons name="notifications-off-outline" size={48} color="#ccc" />
+          <Text style={{ color: "#aaa", marginTop: 12, fontSize: 14 }}>No notifications in the last 7 days</Text>
+        </View>
+      )}
+      {!loading && allNotifications.length > 0 && (
         <ScrollView style={styles.alertList}>
           {allNotifications.map((item) => (
             <TouchableOpacity
               key={item.id}
-              style={[styles.alertBox, item.isLive && styles.liveAlertBox]}
+              style={styles.alertBox}
               onPress={() => markOneAsRead(item.id)}
             >
               <View style={{ flex: 1 }}>
@@ -146,34 +201,31 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF" },
   topBar: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start",
-    paddingHorizontal: 20, paddingTop: 5, paddingBottom: 1, backgroundColor: "#FFFFFF",
+    paddingHorizontal: wp(5), paddingTop: moderateScale(5), paddingBottom: moderateScale(1), backgroundColor: "#FFFFFF",
   },
   leftSection: { flexDirection: "column" },
-  greeting: { fontSize: 26, fontWeight: "bold", color: "#000" },
-  date: { fontSize: 14, color: "#888", marginTop: 4 },
+  greeting: { fontSize: moderateScale(26), fontWeight: "bold", color: "#000" },
+  date: { fontSize: moderateScale(14), color: "#888", marginTop: moderateScale(4) },
   bellContainer: { position: "relative" },
   notificationDot: {
     position: "absolute", top: -2, right: -2,
-    width: 8, height: 8, borderRadius: 4, backgroundColor: "red",
+    width: moderateScale(8), height: moderateScale(8), borderRadius: moderateScale(4), backgroundColor: "red",
   },
   markReadContainer: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 20, marginTop: 20,
+    paddingHorizontal: wp(5), marginTop: moderateScale(20),
   },
-  alertTitle: { fontSize: 20, fontWeight: "bold" },
-  unreadBadge: { fontSize: 14, color: "#E53935", fontWeight: "600" },
-  markReadText: { fontSize: 14, color: "#86c7ef" },
-  alertList: { paddingHorizontal: 20, marginTop: 10 },
+  alertTitle: { fontSize: moderateScale(20), fontWeight: "bold" },
+  unreadBadge: { fontSize: moderateScale(14), color: "#E53935", fontWeight: "600" },
+  markReadText: { fontSize: moderateScale(14), color: "#86c7ef" },
+  alertList: { paddingHorizontal: wp(5), marginTop: moderateScale(10) },
   alertBox: {
-    backgroundColor: "#fbf1a1", padding: 14, borderRadius: 8,
-    marginBottom: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    backgroundColor: "#fbf1a1", padding: moderateScale(14), borderRadius: moderateScale(8),
+    marginBottom: moderateScale(10), flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
-  liveAlertBox: {
-    backgroundColor: "#fbf1a1",
-  },
-  alertTitleText: { fontSize: 16 },
-  alertMessage: { fontSize: 13, color: "#D40F0F", marginTop: 4 },
-  timestampText: { fontSize: 11, color: "#999", marginTop: 4 },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "red", marginLeft: 8 },
+  alertTitleText: { fontSize: moderateScale(16) },
+  alertMessage: { fontSize: moderateScale(13), color: "#D40F0F", marginTop: moderateScale(4) },
+  timestampText: { fontSize: moderateScale(11), color: "#999", marginTop: moderateScale(4) },
+  unreadDot: { width: moderateScale(8), height: moderateScale(8), borderRadius: moderateScale(4), backgroundColor: "red", marginLeft: moderateScale(8) },
 });
 

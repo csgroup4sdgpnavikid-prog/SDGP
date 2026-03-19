@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Map, Megaphone, DollarSign, ClipboardList, User } from "lucide-react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   return (
@@ -25,35 +25,45 @@ export default function TabLayout() {
         name="DriverMap"
         options={{
           title: "Map",
-          tabBarIcon: ({ color }) => <Map color={color} size={24} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "map" : "map-outline"} size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="DriverAlert"
         options={{
           title: "Alerts",
-          tabBarIcon: ({ color }) => <Megaphone color={color} size={24} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "megaphone" : "megaphone-outline"} size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="Payment"
         options={{
           title: "Payment",
-          tabBarIcon: ({ color }) => <DollarSign color={color} size={24} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "cash" : "cash-outline"} size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="Absense"
+        name="Absent-list"
         options={{
           title: "Attendance",
-          tabBarIcon: ({ color }) => <ClipboardList color={color} size={24} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "clipboard" : "clipboard-outline"} size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="DriverProfile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => <User color={color} size={24} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
+          ),
         }}
       />
 
@@ -61,6 +71,8 @@ export default function TabLayout() {
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="DriverSettings" options={{ href: null }} />
+      <Tabs.Screen name="Students" options={{ href: null }} />
+      <Tabs.Screen name="LiveVan" options={{ href: null }} />
     </Tabs>
   );
 }

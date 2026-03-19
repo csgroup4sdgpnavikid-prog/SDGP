@@ -2,142 +2,226 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
   ActivityIndicator,
-  Platform,
   RefreshControl,
+  Alert,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import StarRating from "../../components/StarRating";
+import {
+  collection,
+  doc,
+  getDocs,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
+import { db, auth } from "../../firebaseConfig";
 import RatingCard from "../../components/RatingCard";
 import RatingDropdown from "../../components/RatingDropdown";
-import { fetchDrivers, submitRating, fetchRatings, canRateDriver } from "../../services/ratingApi";
-import { auth } from "../../firebaseConfig";
-import { Driver, Rating } from "../../types";
+import StarRating from "../../components/StarRating";
+import {
+  fetchRatings,
+  fetchRoutes,
+  fetchDriversByRoute,
+  submitRating,
+  canRateDriver,
+} from "../../services/ratingApi";
+import { Driver, Rating, Route } from "../../types";
 
 export default function RateDriverScreen() {
-  // ── Rate Driver state ─────────────────────────────────────────────
-  const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [selectedId, setSelectedId] = useState("");
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
-  const [rating, setRating] = useState(0);          // single 1–5 star score
-  const [comment, setComment] = useState("");
-  const [driversLoading, setDriversLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [cooldownMsg, setCooldownMsg] = useState<string | null>(null);
-  const [cooldownChecking, setCooldownChecking] = useState(false);
+  const parentId = auth.currentUser?.uid ?? null;
 
-  // ── Rating history state ──────────────────────────────────────────
+  // ── Find Your Driver state ─────────────────────────────────────────
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [routesLoading, setRoutesLoading] = useState(true);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [routeDrivers, setRouteDrivers] = useState<Driver[]>([]);
+  const [driversLoading, setDriversLoading] = useState(false);
+  const [assigning, setAssigning] = useState<string | null>(null);
+
+  // ── Inline rating state (per driver) ──────────────────────────────
+  const [ratingOpenId, setRatingOpenId] = useState<string | null>(null);
+  const [driverStars, setDriverStars] = useState<Record<string, number>>({});
+const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [cooldownMap, setCooldownMap] = useState<Record<string, string>>({});
+
+  // ── Rating history state ───────────────────────────────────────────
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [filter, setFilter] = useState("");
   const [ratingsLoading, setRatingsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [ratingsError, setRatingsError] = useState<string | null>(null);
 
-  const parentId = auth.currentUser?.uid ?? null;
-
-  // Load drivers on mount
+  // Load routes on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const data = await fetchDrivers();
-        setDrivers(data);
-      } catch {
-        Alert.alert("Error", "Failed to load drivers.");
-      } finally {
-        setDriversLoading(false);
-      }
-    })();
+    fetchRoutes()
+      .then(setRoutes)
+      .catch(() => {})
+      .finally(() => setRoutesLoading(false));
   }, []);
 
-  // Reset form + check cooldown when driver picker changes
+  // Load drivers when a route is selected
   useEffect(() => {
-    const driver = drivers.find((d) => d.id === selectedId) ?? null;
-    setSelectedDriver(driver);
-    setRating(0);
-    setComment("");
-    setCooldownMsg(null);
-
-    if (driver && parentId) {
-      setCooldownChecking(true);
-      canRateDriver(parentId, driver.id)
-        .then((result) => { if (!result.canRate) setCooldownMsg(result.message); })
-        .catch(() => {})
-        .finally(() => setCooldownChecking(false));
+    if (!selectedRouteId) {
+      setRouteDrivers([]);
+      return;
     }
-  }, [selectedId, drivers, parentId]);
+    setDriversLoading(true);
+    fetchDriversByRoute(selectedRouteId)
+      .then(setRouteDrivers)
+      .catch(() => setRouteDrivers([]))
+      .finally(() => setDriversLoading(false));
+  }, [selectedRouteId]);
 
   // Load rating history
-  const loadRatings = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) setRefreshing(true);
-      else setRatingsLoading(true);
-      setRatingsError(null);
-      const data = await fetchRatings(filter ? { stars: filter } : undefined);
-      setRatings(data);
-    } catch {
-      setRatingsError("Failed to load ratings.");
-    } finally {
-      setRatingsLoading(false);
-      setRefreshing(false);
+  const loadRatings = useCallback(
+    async (isRefresh = false) => {
+      try {
+        if (isRefresh) setRefreshing(true);
+        else setRatingsLoading(true);
+        setRatingsError(null);
+        const data = await fetchRatings(filter ? { stars: filter } : undefined);
+        setRatings(data);
+      } catch {
+        setRatingsError("Failed to load ratings.");
+      } finally {
+        setRatingsLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [filter]
+  );
+
+  useEffect(() => {
+    loadRatings();
+  }, [loadRatings]);
+
+  // ── Assign driver to all parent's children ────────────────────────
+  const handleAssignDriver = (driver: Driver) => {
+    if (!parentId) {
+      Alert.alert("Not logged in", "Please log in first.");
+      return;
     }
-  }, [filter]);
+    Alert.alert(
+      "Confirm Driver",
+      `Assign ${driver.name} as your driver?\n\nAll your children will be registered under this driver.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Assign",
+          onPress: async () => {
+            setAssigning(driver.id);
+            try {
+              await updateDoc(doc(db, "parents", parentId), {
+                assignedDriverId: driver.id,
+              });
+              await updateDoc(doc(db, "drivers", driver.id), {
+                associatedParentIds: arrayUnion(parentId),
+              });
+              const childrenSnap = await getDocs(
+                collection(db, "parents", parentId, "children")
+              );
+              await Promise.all(
+                childrenSnap.docs.map((c) =>
+                  updateDoc(c.ref, { driverId: driver.id })
+                )
+              );
+              Alert.alert(
+                "Driver Assigned",
+                `Your children are now registered with ${driver.name}.`
+              );
+            } catch {
+              Alert.alert("Error", "Assignment failed. Please try again.");
+            } finally {
+              setAssigning(null);
+            }
+          },
+        },
+      ]
+    );
+  };
 
-  useEffect(() => { loadRatings(); }, [loadRatings]);
-
-  const handleSubmit = async () => {
-    if (!parentId) return Alert.alert("Not logged in", "Please log in first.");
-    if (!selectedId) return Alert.alert("Select Driver", "Please select a driver.");
-    if (rating === 0) return Alert.alert("No Rating", "Please tap a star to rate the driver.");
-    if (!selectedDriver) return;
-
+  // ── Toggle inline rating panel ────────────────────────────────────
+  const toggleRatingPanel = async (driver: Driver) => {
+    if (!parentId) {
+      Alert.alert("Not logged in", "Please log in first.");
+      return;
+    }
+    // Close if already open
+    if (ratingOpenId === driver.id) {
+      setRatingOpenId(null);
+      return;
+    }
+    setRatingOpenId(driver.id);
+    // Check cooldown
     try {
-      setSubmitting(true);
-      await submitRating({
-        parentId,
-        driverId: selectedId,
-        driverName: selectedDriver.name,
-        rating,
-        comment: comment.trim() || undefined,
-      });
-      Alert.alert("Thank You!", "Your rating has been submitted.", [
-        { text: "OK", onPress: () => loadRatings() },
-      ]);
-      setRating(0);
-      setComment("");
-      setSelectedId("");
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to submit.";
-      Alert.alert("Error", message);
-    } finally {
-      setSubmitting(false);
+      const result = await canRateDriver(parentId, driver.id);
+      if (!result.canRate) {
+        setCooldownMap((prev) => ({ ...prev, [driver.id]: result.message }));
+      } else {
+        // Clear any stale cooldown message
+        setCooldownMap((prev) => {
+          const next = { ...prev };
+          delete next[driver.id];
+          return next;
+        });
+      }
+    } catch {
+      // Ignore cooldown check failure — let them try
     }
   };
 
-  // Average across history list
+  // ── Submit inline rating ──────────────────────────────────────────
+  const handleSubmitRating = async (driver: Driver) => {
+    const stars = driverStars[driver.id] ?? 0;
+    if (!parentId) return Alert.alert("Not logged in");
+    if (stars === 0) return Alert.alert("No Rating", "Please tap a star to rate the driver.");
+
+    setSubmittingId(driver.id);
+    try {
+      await submitRating({
+        parentId,
+        driverId: driver.id,
+        driverName: driver.name,
+        rating: stars,
+      });
+      // Clear inputs and close panel
+      setDriverStars((prev) => {
+        const next = { ...prev };
+        delete next[driver.id];
+        return next;
+      });
+      setRatingOpenId(null);
+      // Refresh driver list (updated averages) and history
+      if (selectedRouteId) {
+        fetchDriversByRoute(selectedRouteId).then(setRouteDrivers).catch(() => {});
+      }
+      loadRatings();
+      Alert.alert("Thank You!", "Your rating has been submitted.");
+    } catch {
+      Alert.alert("Error", "Could not submit rating. Please try again.");
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
   const avgOverall =
     ratings.length > 0
       ? (ratings.reduce((s, r) => s + (r.overall ?? 0), 0) / ratings.length).toFixed(1)
       : null;
 
-  const submitDisabled =
-    !selectedId || rating === 0 || submitting || !!cooldownMsg || cooldownChecking;
+  const selectedRoute = routes.find((r) => r.id === selectedRouteId);
 
   const starLabels = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
 
   return (
     <SafeAreaView style={styles.safe} edges={["bottom"]}>
-
-      {/* Header */}
       <View style={styles.pageHeader}>
-        <Ionicons name="star" size={20} color="#fff" />
-        <Text style={styles.pageTitle}>Rate Your Driver</Text>
+        <Ionicons name="map" size={20} color="#fff" />
+        <Text style={styles.pageTitle}>Find Your Driver</Text>
       </View>
 
       <ScrollView
@@ -147,145 +231,220 @@ export default function RateDriverScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => loadRatings(true)}
-            colors={["#1a237e"]}
-            tintColor="#1a237e"
+            colors={["#5AA9E6"]}
+            tintColor="#5AA9E6"
           />
         }
       >
+        {/* ── SECTION 1: SELECT ROUTE ── */}
+        <SectionHeader icon="navigate" title="Select Your Route" />
 
-        {/* ── SECTION 1: RATE ── */}
-        <SectionHeader icon="star" title="Rate a Driver" />
-
-        {/* Driver picker */}
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>Select Driver</Text>
-          {driversLoading ? (
-            <ActivityIndicator color="#1a237e" style={{ marginVertical: 16 }} />
+          <Text style={styles.cardLabel}>Available Routes</Text>
+          {routesLoading ? (
+            <ActivityIndicator color="#5AA9E6" style={{ marginVertical: 16 }} />
+          ) : routes.length === 0 ? (
+            <View style={styles.emptySmall}>
+              <Ionicons name="map-outline" size={32} color="#ccc" />
+              <Text style={styles.emptySmallText}>
+                No routes available yet.{"\n"}Contact your administrator.
+              </Text>
+            </View>
           ) : (
-            <View style={styles.pickerBox}>
-              <Picker
-                selectedValue={selectedId}
-                onValueChange={(v) => setSelectedId(String(v))}
-                style={styles.picker}
-                dropdownIconColor="#1a237e"
-              >
-                <Picker.Item label="— Select a driver —" value="" />
-                {drivers.map((d) => (
-                  <Picker.Item
-                    key={d.id}
-                    label={`${d.name}${d.vanNumber ? `  (${d.vanNumber})` : ""}`}
-                    value={d.id}
-                  />
-                ))}
-              </Picker>
-            </View>
-          )}
-
-          {/* Driver mini-profile */}
-          {selectedDriver && (
-            <View style={styles.profile}>
-              <View style={styles.avatar}>
-                <Ionicons name="person" size={26} color="#fff" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.profileName}>{selectedDriver.name}</Text>
-                {selectedDriver.vanNumber ? (
-                  <View style={styles.profileRow}>
-                    <Ionicons name="bus-outline" size={13} color="#555" />
-                    <Text style={styles.profileDetail}>  Van: {selectedDriver.vanNumber}</Text>
-                  </View>
-                ) : null}
-                {selectedDriver.route ? (
-                  <View style={styles.profileRow}>
-                    <Ionicons name="navigate-outline" size={13} color="#555" />
-                    <Text style={styles.profileDetail}>  {selectedDriver.route}</Text>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-          )}
-
-          {/* Cooldown warning */}
-          {cooldownChecking && (
-            <ActivityIndicator size="small" color="#1a237e" style={{ marginTop: 10 }} />
-          )}
-          {cooldownMsg && (
-            <View style={styles.cooldownBanner}>
-              <Ionicons name="time-outline" size={16} color="#b45309" />
-              <Text style={styles.cooldownText}> {cooldownMsg}</Text>
-            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.routeGrid}>
+              {routes.map((route) => {
+                const isSelected = selectedRouteId === route.id;
+                return (
+                  <TouchableOpacity
+                    key={route.id}
+                    onPress={() => setSelectedRouteId(isSelected ? null : route.id)}
+                    style={[styles.routeCard, isSelected && styles.routeCardSelected]}
+                  >
+                    <Ionicons
+                      name="map-outline"
+                      size={20}
+                      color={isSelected ? "#fff" : "#5AA9E6"}
+                    />
+                    <Text style={[styles.routeCardName, isSelected && styles.routeCardNameSelected]}>
+                      {route.name}
+                    </Text>
+                    <Text style={[styles.routeCardArea, isSelected && styles.routeCardAreaSelected]}>
+                      {route.area}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           )}
         </View>
 
-        {/* Single star rating */}
-        {selectedDriver && !cooldownMsg && (
+        {/* ── SECTION 2: DRIVERS ON SELECTED ROUTE ── */}
+        {selectedRouteId && (
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Your Rating</Text>
-            <View style={styles.starCenter}>
-              <StarRating rating={rating} size={38} onRate={setRating} />
-              {rating > 0 && (
-                <Text style={styles.starLabel}>{starLabels[rating]}</Text>
-              )}
-            </View>
+            <Text style={styles.cardLabel}>
+              Drivers on {selectedRoute?.name ?? "Route"} — sorted by rating
+            </Text>
+            {driversLoading ? (
+              <ActivityIndicator color="#5AA9E6" style={{ marginVertical: 16 }} />
+            ) : routeDrivers.length === 0 ? (
+              <View style={styles.emptySmall}>
+                <Ionicons name="person-outline" size={32} color="#ccc" />
+                <Text style={styles.emptySmallText}>
+                  No drivers assigned to this route yet.
+                </Text>
+              </View>
+            ) : (
+              routeDrivers.map((driver, index) => {
+                const hasRating =
+                  driver.averageRating &&
+                  typeof driver.averageRating.overall === "number";
+                const isAssigning = assigning === driver.id;
+                const isRatingOpen = ratingOpenId === driver.id;
+                const isSubmitting = submittingId === driver.id;
+                const cooldown = cooldownMap[driver.id];
+                const currentStars = driverStars[driver.id] ?? 0;
+
+                return (
+                  <View key={driver.id} style={styles.driverBlock}>
+                    {/* ── Driver info row ── */}
+                    <View style={styles.driverCard}>
+                      <View style={styles.rankBadge}>
+                        <Text style={styles.rankText}>{index + 1}</Text>
+                      </View>
+
+                      <View style={styles.driverInfo}>
+                        <Text style={styles.driverName}>{driver.name}</Text>
+                        {driver.vanNumber ? (
+                          <View style={styles.driverRow}>
+                            <Ionicons name="bus-outline" size={12} color="#555" />
+                            <Text style={styles.driverDetail}>{"  "}Van: {driver.vanNumber}</Text>
+                          </View>
+                        ) : null}
+                        {hasRating ? (
+                          <View style={styles.driverRow}>
+                            <StarRating
+                              rating={driver.averageRating!.overall}
+                              size={13}
+                              readonly
+                            />
+                            <Text style={styles.ratingText}>
+                              {"  "}{driver.averageRating!.overall.toFixed(1)}
+                              {"  "}
+                              <Text style={styles.ratingCount}>
+                                ({driver.averageRating!.totalRatings ?? 0} ratings)
+                              </Text>
+                            </Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.noRatingText}>Not yet rated</Text>
+                        )}
+                      </View>
+
+                      {/* Action buttons */}
+                      <View style={styles.actionBtns}>
+                        <TouchableOpacity
+                          onPress={() => handleAssignDriver(driver)}
+                          disabled={!!assigning}
+                          style={[styles.assignBtn, !!assigning && styles.btnOff]}
+                        >
+                          {isAssigning ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Text style={styles.assignBtnText}>Select</Text>
+                          )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={() => toggleRatingPanel(driver)}
+                          style={[styles.rateBtn, isRatingOpen && styles.rateBtnActive]}
+                        >
+                          <Ionicons
+                            name={isRatingOpen ? "chevron-up" : "star-outline"}
+                            size={14}
+                            color={isRatingOpen ? "#5AA9E6" : "#5AA9E6"}
+                          />
+                          <Text style={[styles.rateBtnText, isRatingOpen && styles.rateBtnTextActive]}>
+                            Rate
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* ── Inline rating panel ── */}
+                    {isRatingOpen && (
+                      <View style={styles.ratingPanel}>
+                        {cooldown ? (
+                          <View style={styles.cooldownBanner}>
+                            <Ionicons name="time-outline" size={15} color="#5AA9E6" />
+                            <Text style={styles.cooldownText}> {cooldown}</Text>
+                          </View>
+                        ) : (
+                          <>
+                            <Text style={styles.panelLabel}>Tap to rate</Text>
+                            <View style={styles.starsRow}>
+                              <StarRating
+                                rating={currentStars}
+                                size={30}
+                                onRate={(s) =>
+                                  setDriverStars((prev) => ({ ...prev, [driver.id]: s }))
+                                }
+                              />
+                              {currentStars > 0 && (
+                                <Text style={styles.starLabel}>
+                                  {starLabels[currentStars]}
+                                </Text>
+                              )}
+                            </View>
+
+<TouchableOpacity
+                              onPress={() => handleSubmitRating(driver)}
+                              disabled={currentStars === 0 || isSubmitting}
+                              style={[
+                                styles.submitBtn,
+                                (currentStars === 0 || isSubmitting) && styles.btnOff,
+                              ]}
+                            >
+                              {isSubmitting ? (
+                                <ActivityIndicator color="#fff" />
+                              ) : (
+                                <View style={styles.submitInner}>
+                                  <Ionicons name="checkmark-circle" size={16} color="#fff" />
+                                  <Text style={styles.submitText}>Submit Rating</Text>
+                                </View>
+                              )}
+                            </TouchableOpacity>
+                          </>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                );
+              })
+            )}
           </View>
         )}
 
-        {/* Comment */}
-        {selectedDriver && !cooldownMsg && (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>Comment (Optional)</Text>
-            <TextInput
-              style={styles.commentInput}
-              placeholder="Share your experience..."
-              placeholderTextColor="#bbb"
-              multiline
-              numberOfLines={3}
-              value={comment}
-              onChangeText={setComment}
-              maxLength={300}
-            />
-            <Text style={styles.charCount}>{comment.length}/300</Text>
-          </View>
-        )}
-
-        {/* Submit */}
-        <TouchableOpacity
-          style={[styles.submitBtn, submitDisabled && styles.submitBtnOff]}
-          onPress={handleSubmit}
-          disabled={submitDisabled}
-        >
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <View style={styles.submitInner}>
-              <Ionicons name="checkmark-circle" size={19} color="#fff" />
-              <Text style={styles.submitText}>Submit Rating</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        {/* ── SECTION 2: HISTORY ── */}
+        {/* ── SECTION 3: RATING HISTORY ── */}
         <View style={styles.divider} />
         <SectionHeader icon="list" title="Rating History" />
 
-        {/* Stats bar */}
         {!ratingsLoading && ratings.length > 0 && (
           <View style={styles.statsBar}>
             <StatItem number={String(ratings.length)} label="Total Ratings" />
-            {avgOverall && <StatItem number={`${avgOverall} ⭐`} label="Avg Rating" />}
+            {avgOverall && (
+              <StatItem number={`${avgOverall} \u2b50`} label="Avg Rating" />
+            )}
           </View>
         )}
 
-        {/* Filter */}
         <RatingDropdown
           selectedValue={filter}
           onChange={setFilter}
           label="Filter by Stars"
         />
 
-        {/* List */}
         {ratingsLoading ? (
-          <ActivityIndicator color="#1a237e" style={{ marginVertical: 24 }} />
+          <ActivityIndicator color="#5AA9E6" style={{ marginVertical: 24 }} />
         ) : ratingsError ? (
           <View style={styles.empty}>
             <Ionicons name="cloud-offline-outline" size={44} color="#ccc" />
@@ -304,18 +463,17 @@ export default function RateDriverScreen() {
             <RatingCard key={item.id ?? String(index)} item={item} />
           ))
         )}
-
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function SectionHeader({ icon, title }: { icon: any; title: string }) {
   return (
     <View style={styles.sectionHeader}>
-      <Ionicons name={icon} size={16} color="#1a237e" />
+      <Ionicons name={icon} size={16} color="#5AA9E6" />
       <Text style={styles.sectionTitle}>{title}</Text>
     </View>
   );
@@ -330,13 +488,13 @@ function StatItem({ number, label }: { number: string; label: string }) {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Styles ─────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f0f4ff" },
+  safe: { flex: 1, backgroundColor: "#F8FAFC" },
 
   pageHeader: {
-    backgroundColor: "#1a237e",
+    backgroundColor: "#5AA9E6",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
@@ -347,9 +505,9 @@ const styles = StyleSheet.create({
   scroll: { padding: 14, paddingBottom: 48 },
 
   sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#1a237e", marginLeft: 7 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#5AA9E6", marginLeft: 7 },
 
-  divider: { height: 1, backgroundColor: "#dde2f0", marginVertical: 24 },
+  divider: { height: 1, backgroundColor: "#FBF1A1", marginVertical: 24 },
 
   card: {
     backgroundColor: "#fff",
@@ -368,72 +526,131 @@ const styles = StyleSheet.create({
     color: "#888",
     textTransform: "uppercase",
     letterSpacing: 0.8,
-    marginBottom: 10,
+    marginBottom: 12,
   },
 
-  pickerBox: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, overflow: "hidden" },
-  picker: { height: Platform.OS === "ios" ? 140 : 50, color: "#333" },
+  // Route grid
+  routeGrid: { flexDirection: "row", gap: 10, paddingVertical: 4 },
+  routeCard: {
+    borderWidth: 1.5,
+    borderColor: "#FBF1A1",
+    borderRadius: 12,
+    padding: 14,
+    alignItems: "center",
+    width: 130,
+    backgroundColor: "#FFFEF5",
+  },
+  routeCardSelected: { backgroundColor: "#5AA9E6", borderColor: "#5AA9E6" },
+  routeCardName: { fontSize: 14, fontWeight: "700", color: "#5AA9E6", marginTop: 6, textAlign: "center" },
+  routeCardNameSelected: { color: "#fff" },
+  routeCardArea: { fontSize: 11, color: "#666", marginTop: 3, textAlign: "center" },
+  routeCardAreaSelected: { color: "#FBF1A1" },
 
-  profile: {
+  // Driver block (card + panel)
+  driverBlock: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    marginBottom: 2,
+  },
+  driverCard: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 12,
-    backgroundColor: "#f0f4ff",
-    borderRadius: 10,
-    padding: 12,
+    paddingVertical: 12,
+    gap: 10,
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#1a237e",
+  rankBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#FBF1A1",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    flexShrink: 0,
   },
-  profileName: { fontSize: 15, fontWeight: "700", color: "#1a237e", marginBottom: 3 },
-  profileRow: { flexDirection: "row", alignItems: "center", marginVertical: 1 },
-  profileDetail: { fontSize: 12, color: "#555" },
+  rankText: { fontSize: 13, fontWeight: "700", color: "#5AA9E6" },
+  driverInfo: { flex: 1 },
+  driverName: { fontSize: 14, fontWeight: "700", color: "#1F2937", marginBottom: 3 },
+  driverRow: { flexDirection: "row", alignItems: "center", marginTop: 2 },
+  driverDetail: { fontSize: 12, color: "#555" },
+  ratingText: { fontSize: 12, color: "#333", fontWeight: "600" },
+  ratingCount: { fontSize: 11, color: "#888", fontWeight: "400" },
+  noRatingText: { fontSize: 11, color: "#aaa", marginTop: 2 },
 
+  // Action buttons (Assign + Rate)
+  actionBtns: { flexDirection: "column", gap: 6, alignItems: "flex-end" },
+  assignBtn: {
+    backgroundColor: "#5AA9E6",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    minWidth: 62,
+    alignItems: "center",
+  },
+  assignBtnText: { color: "#fff", fontSize: 12, fontWeight: "700" },
+  rateBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1.5,
+    borderColor: "#FBF1A1",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    minWidth: 62,
+    justifyContent: "center",
+    backgroundColor: "#FFFEF5",
+  },
+  rateBtnActive: { backgroundColor: "#FBF1A1", borderColor: "#FBF1A1" },
+  rateBtnText: { fontSize: 12, fontWeight: "700", color: "#5AA9E6" },
+  rateBtnTextActive: { color: "#5AA9E6" },
+  btnOff: { backgroundColor: "#9CA3AF", borderColor: "#9CA3AF" },
+
+  // Inline rating panel
+  ratingPanel: {
+    backgroundColor: "#f8f9ff",
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#FBF1A1",
+  },
+  panelLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#888",
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+    marginBottom: 8,
+  },
+  starsRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  starLabel: { fontSize: 13, fontWeight: "600", color: "#5AA9E6", marginLeft: 8 },
+  submitBtn: {
+    backgroundColor: "#5AA9E6",
+    borderRadius: 10,
+    paddingVertical: 11,
+    alignItems: "center",
+  },
+  submitInner: { flexDirection: "row", alignItems: "center", gap: 6 },
+  submitText: { color: "#fff", fontSize: 13, fontWeight: "700" },
+
+  // Cooldown banner
   cooldownBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fef3c7",
+    backgroundColor: "#FBF1A1",
     borderRadius: 8,
     padding: 10,
-    marginTop: 10,
   },
-  cooldownText: { fontSize: 13, color: "#b45309", flex: 1, flexWrap: "wrap" },
+  cooldownText: { fontSize: 13, color: "#5AA9E6", flex: 1, flexWrap: "wrap" },
 
-  starCenter: { alignItems: "center", paddingVertical: 10 },
-  starLabel: { marginTop: 8, fontSize: 15, fontWeight: "600", color: "#1a237e" },
+  // Empty states
+  emptySmall: { alignItems: "center", paddingVertical: 20 },
+  emptySmallText: { color: "#aaa", fontSize: 13, marginTop: 8, textAlign: "center", lineHeight: 20 },
 
-  commentInput: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 10,
-    fontSize: 13,
-    color: "#333",
-    textAlignVertical: "top",
-    minHeight: 72,
-  },
-  charCount: { textAlign: "right", fontSize: 10, color: "#bbb", marginTop: 3 },
-
-  submitBtn: {
-    backgroundColor: "#1a237e",
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  submitBtnOff: { backgroundColor: "#9fa8da" },
-  submitInner: { flexDirection: "row", alignItems: "center" },
-  submitText: { color: "#fff", fontSize: 15, fontWeight: "700", marginLeft: 7 },
-
+  // Stats bar
   statsBar: {
     flexDirection: "row",
-    backgroundColor: "#1a237e",
+    backgroundColor: "#5AA9E6",
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
@@ -441,12 +658,12 @@ const styles = StyleSheet.create({
   },
   stat: { alignItems: "center" },
   statNum: { fontSize: 20, fontWeight: "800", color: "#fff" },
-  statLbl: { fontSize: 11, color: "#aad4f5", marginTop: 2 },
+  statLbl: { fontSize: 11, color: "#FBF1A1", marginTop: 2 },
 
   empty: { alignItems: "center", paddingVertical: 32 },
   emptyText: { color: "#999", fontSize: 14, marginTop: 10, textAlign: "center" },
   retryBtn: {
-    backgroundColor: "#1a237e",
+    backgroundColor: "#5AA9E6",
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 8,

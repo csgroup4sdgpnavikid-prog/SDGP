@@ -1,10 +1,8 @@
 const request = require('supertest');
 
-// Fully inlined mocks to avoid any hoisting/scoping issues
-jest.mock('firebase-admin', () => ({
-    initializeApp: jest.fn(),
-    credential: { cert: jest.fn() },
-    firestore: () => ({
+// Mock firebase-admin before requiring anything else
+jest.mock('firebase-admin', () => {
+    const firestoreMock = {
         collection: jest.fn().mockReturnThis(),
         doc: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
@@ -13,100 +11,108 @@ jest.mock('firebase-admin', () => ({
         set: jest.fn(),
         add: jest.fn(),
         update: jest.fn(),
-    }),
-}));
+        settings: jest.fn(),
+    };
+    return {
+        initializeApp: jest.fn(),
+        credential: { cert: jest.fn() },
+        firestore: Object.assign(() => firestoreMock, {
+            FieldValue: { serverTimestamp: jest.fn() },
+        }),
+    };
+});
 
 jest.mock('../config/firebase', () => {
     const collectionMock = jest.fn().mockReturnThis();
     const docMock = jest.fn().mockReturnThis();
-    // We need these to be accessible to override behaviors
-    // attaching them to the exported object is a hack but might work for simple tests
-    // or we just re-require the module in the test to get the mock handles
     return {
         db: {
             collection: collectionMock,
             doc: docMock,
+            settings: jest.fn(),
         },
         admin: {
             firestore: { FieldValue: { serverTimestamp: jest.fn() } },
-            messaging: jest.fn().mockReturnValue({ send: jest.fn() }),
+            auth: jest.fn().mockReturnValue({
+                verifyIdToken: jest.fn(),
+            }),
         },
     };
 });
 
 const app = require('../server');
-// Get handles to the mocks
-const { db } = require('../config/firebase');
+const { admin } = require('../config/firebase');
 
-describe('Auth API Endpoints', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+describe('API Endpoints', () => {
+    describe('GET /api/health', () => {
+        it('should return 200 with status OK', async () => {
+            const res = await request(app).get('/api/health');
 
-        // Setup default chain behavior
-        // db.collection is the mock function
-        const mockGet = jest.fn();
-        const mockSet = jest.fn();
-
-        // We need to re-implement the chain explicitly because the inlined mock above loses state
-        // when we re-require.
-        // Actually, jest.mock factory only runs once. 'db' imported here IS the object returned above.
-
-        // Helper to setup the chain
-        db.collection.mockReturnValue({
-            where: jest.fn().mockReturnValue({
-                limit: jest.fn().mockReturnValue({
-                    get: mockGet
-                }),
-                get: mockGet
-            }),
-            doc: jest.fn().mockReturnValue({
-                set: mockSet,
-                get: mockGet,
-                update: jest.fn()
-            }),
-            add: jest.fn()
+            expect(res.statusCode).toEqual(200);
+            expect(res.body.status).toBe('OK');
+            expect(res.body.message).toBe('Server is running');
+            expect(res.body).toHaveProperty('timestamp');
         });
-
-        // Expose mocks for tests
-        db.mockGet = mockGet; // attach to db object for easy access
-        db.mockSet = mockSet;
     });
 
-    describe('POST /api/auth/register', () => {
-        it('should register a new user successfully', async () => {
-            // User does not exist
-            db.mockGet.mockResolvedValueOnce({ empty: true });
-            // Set succeeds
-            db.mockSet.mockResolvedValueOnce({});
-
+    describe('POST /api/trips/start (without auth)', () => {
+        it('should return 401 when no auth token is provided', async () => {
             const res = await request(app)
-                .post('/api/auth/register')
-                .send({
-                    email: 'test@example.com',
-                    password: 'password123',
-                    role: 'parent',
-                    name: 'Test Parent'
-                });
+                .post('/api/trips/start')
+                .send({ driverId: 'test-driver' });
 
-            expect(res.statusCode).toEqual(201);
-            expect(res.body.success).toBe(true);
+            expect(res.statusCode).toEqual(401);
+        });
+    });
+
+    describe('POST /api/absence/mark (without auth)', () => {
+        it('should return 401 when no auth token is provided', async () => {
+            const res = await request(app)
+                .post('/api/absence/mark')
+                .send({ childId: 'test-child', date: '2026-03-19', absenceType: 'full_day' });
+
+            expect(res.statusCode).toEqual(401);
+        });
+    });
+
+    describe('POST /api/sos/trigger (without auth)', () => {
+        it('should return 401 when no auth token is provided', async () => {
+            const res = await request(app)
+                .post('/api/sos/trigger')
+                .send({ driverId: 'test-driver', message: 'Test alert' });
+
+            expect(res.statusCode).toEqual(401);
+        });
+    });
+
+    describe('Authentication middleware', () => {
+        it('should reject requests with invalid token format', async () => {
+            const res = await request(app)
+                .post('/api/trips/start')
+                .set('Authorization', 'InvalidToken')
+                .send({ driverId: 'test-driver' });
+
+            expect(res.statusCode).toEqual(401);
         });
 
-        it('should fail if email already exists', async () => {
-            // User exists
-            db.mockGet.mockResolvedValueOnce({ empty: false, docs: [{ data: () => ({}) }] });
+        it('should reject requests with expired/invalid bearer token', async () => {
+            // Mock verifyIdToken to throw
+            admin.auth().verifyIdToken.mockRejectedValueOnce(new Error('Token expired'));
 
             const res = await request(app)
-                .post('/api/auth/register')
-                .send({
-                    email: 'existing@example.com',
-                    password: 'password123',
-                    role: 'driver',
-                    name: 'Test Driver'
-                });
+                .post('/api/trips/start')
+                .set('Authorization', 'Bearer fake-expired-token')
+                .send({ driverId: 'test-driver' });
 
-            expect(res.statusCode).toEqual(400);
-            expect(res.body.error).toBe('Email already exists');
+            expect(res.statusCode).toEqual(401);
+        });
+    });
+
+    describe('GET /nonexistent-route', () => {
+        it('should return 404 for unknown routes', async () => {
+            const res = await request(app).get('/api/nonexistent');
+
+            expect(res.statusCode).toEqual(404);
         });
     });
 });

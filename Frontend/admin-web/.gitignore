@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# local env files
+.env
+.env*.local
+
+# macOS
+.DS_Store
+
+# typescript
+*.tsbuildinfo

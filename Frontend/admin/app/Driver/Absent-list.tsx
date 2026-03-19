@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, ChevronLeft, Search, User } from 'lucide-react-native';
+import { AlertTriangle, CheckCircle2, RefreshCw, Search, User } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { getStudents } from './studentService';
@@ -43,12 +43,13 @@ export default function StudentsScreen() {
   const [students, setStudents]   = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const loadStudents = async () => {
+    const data = await getStudents();
+    setStudents(data);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const data = await getStudents();
-      setStudents(data);
-    };
-    fetchData();
+    loadStudents();
   }, []);
 
   const filtered = students
@@ -70,8 +71,8 @@ export default function StudentsScreen() {
 
       
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <ChevronLeft color="black" size={28} />
+        <TouchableOpacity style={styles.backButton} onPress={loadStudents}>
+          <RefreshCw color="black" size={24} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Students</Text>
         <View style={{ width: 28 }} />

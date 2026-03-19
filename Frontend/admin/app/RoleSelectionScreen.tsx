@@ -1,4 +1,4 @@
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -8,15 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { moderateScale, wp, hp } from "../constants/responsive";
 
 export default function RoleSelectionScreen() {
   const router = useRouter();
 
   return (
     <View style={styles.container}>
-      {/* Back Arrow */}
-      <Ionicons name="arrow-back" size={24} style={styles.backIcon} />
-
       {/* Logo */}
       <Image source={require("../assets/images/logo.png")} style={styles.logo} resizeMode="contain" />
 
@@ -36,7 +34,7 @@ export default function RoleSelectionScreen() {
         onPress={() => router.push("/DriverLogin")}
       >
         <View style={styles.iconCircleBlue}>
-          <MaterialIcons name="directions-bus" size={26} color="#1E88E5" />
+          <Ionicons name="bus" size={26} color="#1E88E5" />
         </View>
         <Text style={styles.cardText}>Driver</Text>
       </TouchableOpacity>
@@ -59,55 +57,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#ffffffff",
-    paddingHorizontal: 24,
+    paddingHorizontal: wp(6),
     alignItems: "center",
   },
 
-  backIcon: {
-    position: "absolute",
-    top: 50,
-    left: 20,
-    color: "#000",
-  },
-
   logo: {
-    width: 145,
-    height: 150,
-    marginTop: 80,
-    marginBottom: 10,
+    width: moderateScale(145),
+    height: moderateScale(150),
+    marginTop: hp(10),
+    marginBottom: moderateScale(10),
   },
 
   title: {
-    fontSize: 22,
+    fontSize: moderateScale(22),
     fontWeight: "700",
     color: "#000",
-    marginTop: 10,
+    marginTop: moderateScale(10),
   },
 
   subtitle: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     color: "#666",
     textAlign: "center",
-    marginTop: 13,
-    marginBottom: 30,
+    marginTop: moderateScale(13),
+    marginBottom: moderateScale(30),
   },
 
   chooseText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: "600",
-    marginBottom: 20,
-    marginTop: 13,
+    marginBottom: moderateScale(20),
+    marginTop: moderateScale(13),
   },
 
   card: {
     width: "100%",
-    height: 130,
-    borderRadius: 30,
+    maxWidth: 520,
+    height: moderateScale(130),
+    borderRadius: moderateScale(30),
     borderWidth: 5,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingHorizontal: moderateScale(20),
+    marginBottom: moderateScale(20),
   },
 
   driverCard: {
@@ -121,27 +113,27 @@ const styles = StyleSheet.create({
   },
 
   iconCircleBlue: {
-    width: 54,
-    height: 54,
-    borderRadius: 22,
+    width: moderateScale(54),
+    height: moderateScale(54),
+    borderRadius: moderateScale(22),
     backgroundColor: "#b2ddfcff",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 15,
+    marginRight: moderateScale(15),
   },
 
   iconCircleYellow: {
-    width: 54,
-    height: 54,
-    borderRadius: 22,
+    width: moderateScale(54),
+    height: moderateScale(54),
+    borderRadius: moderateScale(22),
     backgroundColor: "#f2eca9ff",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 15,
+    marginRight: moderateScale(15),
   },
 
   cardText: {
-    fontSize: 17,
+    fontSize: moderateScale(17),
     fontWeight: "600",
   },
 });

@@ -11,7 +11,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
-import { Driver, Rating } from "../types";
+import { Driver, Rating, Route } from "../types";
 
 const COOLDOWN_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
 
@@ -111,6 +111,48 @@ export async function fetchRatings(params?: {
 
   ratings.sort((a, b) => toMs(b.createdAt) - toMs(a.createdAt));
   return ratings;
+}
+
+// ─── fetchRoutes ──────────────────────────────────────────────────────────────
+
+export async function fetchRoutes(): Promise<Route[]> {
+  const snapshot = await getDocs(collection(db, "routes"));
+  const routes: Route[] = [];
+  snapshot.forEach((docSnap) => {
+    const d = docSnap.data();
+    routes.push({
+      id: docSnap.id,
+      name: d.name || "",
+      area: d.area || "",
+    });
+  });
+  return routes.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// ─── fetchDriversByRoute ──────────────────────────────────────────────────────
+
+export async function fetchDriversByRoute(routeId: string): Promise<Driver[]> {
+  const snapshot = await getDocs(
+    query(collection(db, "drivers"), where("routeId", "==", routeId))
+  );
+  const drivers: Driver[] = [];
+  snapshot.forEach((docSnap) => {
+    const d = docSnap.data();
+    drivers.push({
+      id: docSnap.id,
+      name: d.name || d.driverName || "Unknown",
+      vanNumber: d.vanNumber || d.vanId || d.vehicleNumber || "",
+      route: d.route || d.serviceArea || d.routeName || "",
+      routeId: d.routeId ?? null,
+      averageRating: d.averageRating ?? null,
+    });
+  });
+  // Sort by averageRating.overall descending; unrated drivers go last
+  return drivers.sort((a, b) => {
+    const ra = a.averageRating?.overall ?? -1;
+    const rb = b.averageRating?.overall ?? -1;
+    return rb - ra;
+  });
 }
 
 // ─── canRateDriver ────────────────────────────────────────────────────────────

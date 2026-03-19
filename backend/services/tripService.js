@@ -16,7 +16,7 @@ const createTrip = async (driverId, vanId, stops, tripType = 'morning') => {
     const tripData = {
         tripId: tripRef.id,
         driverId,
-        vanId,
+        vanId: vanId ?? null,
         tripType,
         status: TRIP_STATUS.NOT_STARTED,
         stops: stops.map((stop, index) => ({
@@ -87,32 +87,41 @@ const endTrip = async (tripId) => {
 };
 
 /**
- * Update stop status (picked up, dropped off, skipped)
+ * Update stop status (picked up, dropped off, skipped).
+ * Uses a Firestore transaction to prevent race conditions when
+ * concurrent requests update different stops on the same trip.
  * @param {string} tripId - Trip ID
  * @param {number} stopIndex - Index of the stop
  * @param {string} status - New status
  */
 const updateStopStatus = async (tripId, stopIndex, status) => {
     const tripRef = db.collection(COLLECTIONS.TRIPS).doc(tripId);
-    const tripDoc = await tripRef.get();
 
-    if (!tripDoc.exists) {
-        throw new Error('Trip not found');
-    }
+    const updatedStop = await db.runTransaction(async (transaction) => {
+        const tripDoc = await transaction.get(tripRef);
 
-    const tripData = tripDoc.data();
-    const stops = tripData.stops;
+        if (!tripDoc.exists) {
+            throw new Error('Trip not found');
+        }
 
-    if (stopIndex < 0 || stopIndex >= stops.length) {
-        throw new Error('Invalid stop index');
-    }
+        const stops = [...tripDoc.data().stops];
 
-    stops[stopIndex].status = status;
-    stops[stopIndex].updatedAt = new Date().toISOString();
+        if (stopIndex < 0 || stopIndex >= stops.length) {
+            throw new Error('Invalid stop index');
+        }
 
-    await tripRef.update({ stops });
+        stops[stopIndex] = {
+            ...stops[stopIndex],
+            status,
+            updatedAt: new Date().toISOString(),
+        };
 
-    return stops[stopIndex];
+        transaction.update(tripRef, { stops });
+
+        return stops[stopIndex];
+    });
+
+    return updatedStop;
 };
 
 /**

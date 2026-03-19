@@ -2,301 +2,479 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CheckSquare, Square, DollarSign, Search } from "lucide-react-native";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { CheckSquare, Square, DollarSign } from "lucide-react-native";
+import {
+    collection,
+    query,
+    where,
+    getDocs,
+    getDoc,
+    doc,
+    setDoc,
+    updateDoc,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { db } from "../../firebaseConfig"; // adjust path if needed
+import { db } from "../../firebaseConfig";
+
+// ─── Types ─────────────────────────────────────────────────────────────────
 
 interface PaymentItem {
-  id: string;           // parent doc ID
-  childName: string;
-  parentName: string;
-  parentToken: string;
-  amount: number;
-  route: string;
-  childClass: string;
-  status: "paid" | "pending";
-  paidDate: string | null;
+    id: string;           // parent doc ID
+    paymentDocId: string; // "{parentId}_{YYYY-MM}"
+    childName: string;
+    parentName: string;
+    parentToken: string;
+    amount: number;
+    status: "paid" | "pending";
+    paidAt: string | null;
 }
 
 type FilterType = "all" | "paid" | "pending";
 
+const PAYMENT_AMOUNT = 3000; // LKR — adjust as needed
+
+// ─── Component ─────────────────────────────────────────────────────────────
+
 export default function Payment() {
-  const insets = useSafeAreaInsets();
-  const [payments, setPayments] = useState<PaymentItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingPayment, setPendingPayment] = useState<PaymentItem | null>(null);
-  const [isSending, setIsSending] = useState(false);
+    const insets = useSafeAreaInsets();
+    const [payments, setPayments] = useState<PaymentItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [pendingPayment, setPendingPayment] = useState<PaymentItem | null>(null);
+    const [isSending, setIsSending] = useState(false);
 
-  // ── Load children assigned to this driver from Firestore ─────────────
-  useEffect(() => {
-    loadPayments();
-  }, []);
+    const month = new Date().toISOString().slice(0, 7); // "YYYY-MM"
 
-  async function loadPayments() {
-    setLoading(true);
-    try {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
+    useEffect(() => { loadPayments(); }, []);
 
-      if (!currentUser) {
-        console.warn("No logged-in driver found");
-        setLoading(false);
-        return;
-      }
+    // ── Load parents + existing payment status from Firestore ───────────────
+    async function loadPayments() {
+        setLoading(true);
+        try {
+            const auth = getAuth();
+            const currentUser = auth.currentUser;
+            if (!currentUser) { setLoading(false); return; }
 
-      const driverId = currentUser.uid;
-      console.log("Loading payments for driver:", driverId);
+            const driverId = currentUser.uid;
 
-      // Query all parents assigned to this driver
-      const q = query(collection(db, "parents"), where("assignedDriverId", "==", driverId));
-      const snapshot = await getDocs(q);
+            // Get driver name for payment records
+            const driverSnap = await getDoc(doc(db, "drivers", driverId));
+            const driverName: string = driverSnap.exists() ? (driverSnap.data().name || "Driver") : "Driver";
 
-      if (snapshot.empty) {
-        console.warn("No parents found for this driver");
-        setPayments([]);
-        setLoading(false);
-        return;
-      }
+            // Query parents assigned to this driver
+            const q = query(collection(db, "parents"), where("assignedDriverId", "==", driverId));
+            const snapshot = await getDocs(q);
 
-      const items: PaymentItem[] = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          childName: data.childName || "Unknown Child",
-          parentName: data.name || "Unknown Parent",
-          parentToken: data.expoPushToken || "",
-          amount: 120.0, // fixed amount — update if you store this in Firestore
-          route: data.childClass || "",
-          childClass: data.childClass || "",
-          status: "pending",
-          paidDate: null,
-        };
-      });
+            if (snapshot.empty) {
+                setPayments([]);
+                setLoading(false);
+                return;
+            }
 
-      console.log(`✅ Loaded ${items.length} children for this driver`);
-      setPayments(items);
-    } catch (error) {
-      console.error("Error loading payments:", error);
-    } finally {
-      setLoading(false);
+            const items: PaymentItem[] = [];
+
+            for (const parentDoc of snapshot.docs) {
+                const data = parentDoc.data();
+                const parentId = parentDoc.id;
+                const paymentDocId = `${parentId}_${month}`;
+
+                // Get child name from subcollection
+                let childName = "Unknown Child";
+                try {
+                    const childrenSnap = await getDocs(
+                        collection(db, "parents", parentId, "children")
+                    );
+                    if (!childrenSnap.empty) {
+                        childName = childrenSnap.docs[0].data().name || childName;
+                    }
+                } catch (_) {}
+
+                // Check if a payment record already exists for this month
+                const paySnap = await getDoc(doc(db, "payments", paymentDocId));
+
+                let status: "paid" | "pending" = "pending";
+                let paidAt: string | null = null;
+
+                if (paySnap.exists()) {
+                    status = paySnap.data().status || "pending";
+                    paidAt = paySnap.data().paidAt || null;
+                } else {
+                    // Create a "pending" record so admin can see all parents
+                    await setDoc(doc(db, "payments", paymentDocId), {
+                        paymentId: paymentDocId,
+                        parentId,
+                        parentName: data.name || "Unknown",
+                        driverId,
+                        driverName,
+                        childName,
+                        amount: PAYMENT_AMOUNT,
+                        status: "pending",
+                        month,
+                        paidAt: null,
+                        confirmedBy: null,
+                        notificationSent: false,
+                        createdAt: new Date().toISOString(),
+                    });
+                }
+
+                items.push({
+                    id: parentId,
+                    paymentDocId,
+                    childName,
+                    parentName: data.name || "Unknown Parent",
+                    parentToken: data.expoPushToken || "",
+                    amount: PAYMENT_AMOUNT,
+                    status,
+                    paidAt,
+                });
+            }
+
+            setPayments(items);
+        } catch (error) {
+            console.error("Error loading payments:", error);
+        } finally {
+            setLoading(false);
+        }
     }
-  }
 
-  // ── Checkbox pressed ──────────────────────────────────────────────────
-  const handleCheckboxPress = (item: PaymentItem) => {
-    // If already paid, untick it (revert to pending)
-    if (item.status === "paid") {
-      setPayments((prev) =>
-        prev.map((p) =>
-          p.id === item.id
-            ? { ...p, status: "pending" as const, paidDate: null }
-            : p
-        )
-      );
-      return;
-    }
+    // ── Checkbox pressed ────────────────────────────────────────────────────
+    const handleCheckboxPress = (item: PaymentItem) => {
+        if (item.status === "paid") {
+            // Revert to pending — update state and Firestore
+            setPayments((prev) =>
+                prev.map((p) =>
+                    p.id === item.id ? { ...p, status: "pending", paidAt: null } : p
+                )
+            );
+            updateDoc(doc(db, "payments", item.paymentDocId), {
+                status: "pending",
+                paidAt: null,
+                notificationSent: false,
+            }).catch((e) => console.error("Revert payment error:", e));
+            return;
+        }
 
-    // Instantly show as paid
-    setPayments((prev) =>
-      prev.map((p) =>
-        p.id === item.id
-          ? { ...p, status: "paid" as const, paidDate: new Date().toISOString() }
-          : p
-      )
-    );
+        // Mark as paid optimistically, then show confirmation modal
+        setPayments((prev) =>
+            prev.map((p) =>
+                p.id === item.id
+                    ? { ...p, status: "paid", paidAt: new Date().toISOString() }
+                    : p
+            )
+        );
+        setPendingPayment({ ...item, status: "paid", paidAt: new Date().toISOString() });
+        setShowConfirmation(true);
+    };
 
-    setPendingPayment(item);
-    setShowConfirmation(true);
-  };
+    // ── Confirm: write to Firestore + send push notification ────────────────
+    const handleConfirm = async () => {
+        if (!pendingPayment) return;
+        setIsSending(true);
 
-  // ── Confirm: send push notification to parent ─────────────────────────
-  const handleConfirm = async () => {
-    if (!pendingPayment) return;
-    setIsSending(true);
+        const auth = getAuth();
+        const driverId = auth.currentUser?.uid || "";
+        const paidAt = new Date().toISOString();
 
-    try {
-      const token = pendingPayment.parentToken;
+        try {
+            // 1. Persist to Firestore
+            await updateDoc(doc(db, "payments", pendingPayment.paymentDocId), {
+                status: "paid",
+                paidAt,
+                confirmedBy: driverId,
+                notificationSent: false,
+            });
 
-      if (!token || !token.startsWith("ExponentPushToken")) {
-        console.warn(`⚠️ No valid token for parent: ${pendingPayment.parentName}`);
-      } else {
-        const message = {
-          to: token,
-          sound: "default",
-          title: "✅ Payment Received",
-          body: `Payment of $${pendingPayment.amount.toFixed(2)} for ${pendingPayment.childName} has been confirmed. Thank you!`,
-          priority: "high",
-          data: { type: "payment_confirmation" },
-        };
+            // 2. Send Expo push notification to parent
+            const token = pendingPayment.parentToken;
+            if (token && token.startsWith("ExponentPushToken")) {
+                const message = {
+                    to: token,
+                    sound: "default",
+                    title: "Payment Received",
+                    body: `Payment of LKR ${pendingPayment.amount.toLocaleString()} for ${pendingPayment.childName} has been confirmed. Thank you!`,
+                    priority: "high",
+                    data: { type: "payment_confirmation" },
+                };
 
-        const res = await fetch("https://exp.host/--/api/v2/push/send", {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Accept-Encoding": "gzip, deflate",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(message),
-        });
+                await fetch("https://exp.host/--/api/v2/push/send", {
+                    method: "POST",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(message),
+                });
 
-        const result = await res.json();
-        console.log(`✅ Payment notification sent to ${pendingPayment.parentName}:`, JSON.stringify(result));
-      }
-    } catch (error) {
-      console.error("Failed to send payment notification:", error);
-    } finally {
-      setIsSending(false);
-      setShowConfirmation(false);
-      setPendingPayment(null);
-    }
-  };
+                // Mark notification sent
+                await updateDoc(doc(db, "payments", pendingPayment.paymentDocId), {
+                    notificationSent: true,
+                });
+            }
 
-  // ── Cancel: revert to pending ─────────────────────────────────────────
-  const handleCancel = () => {
-    if (pendingPayment) {
-      setPayments((prev) =>
-        prev.map((p) =>
-          p.id === pendingPayment.id
-            ? { ...p, status: "pending" as const, paidDate: null }
-            : p
-        )
-      );
-    }
-    setShowConfirmation(false);
-    setPendingPayment(null);
-  };
+            // Update local state with confirmed paidAt
+            setPayments((prev) =>
+                prev.map((p) =>
+                    p.id === pendingPayment.id ? { ...p, paidAt } : p
+                )
+            );
+        } catch (error) {
+            console.error("Failed to confirm payment:", error);
+        } finally {
+            setIsSending(false);
+            setShowConfirmation(false);
+            setPendingPayment(null);
+        }
+    };
 
-  const filteredPayments = payments.filter((p) => {
-    if (selectedFilter === "paid") return p.status === "paid";
-    if (selectedFilter === "pending") return p.status === "pending";
-    return true;
-  });
+    // ── Cancel: revert to pending ────────────────────────────────────────────
+    const handleCancel = () => {
+        if (pendingPayment) {
+            setPayments((prev) =>
+                prev.map((p) =>
+                    p.id === pendingPayment.id
+                        ? { ...p, status: "pending", paidAt: null }
+                        : p
+                )
+            );
+        }
+        setShowConfirmation(false);
+        setPendingPayment(null);
+    };
 
-  const totalPaid = payments.filter((p) => p.status === "paid").length;
-  const totalAmount = payments.reduce((sum, p) => (p.status === "paid" ? sum + p.amount : sum), 0);
+    const filteredPayments = payments.filter((p) => {
+        if (selectedFilter === "paid")    return p.status === "paid";
+        if (selectedFilter === "pending") return p.status === "pending";
+        return true;
+    });
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
-      <StatusBar style="dark" />
+    const totalPaid   = payments.filter((p) => p.status === "paid").length;
+    const totalAmount = payments.reduce((sum, p) => (p.status === "paid" ? sum + p.amount : sum), 0);
+    const outstanding = payments.reduce((sum, p) => (p.status === "pending" ? sum + p.amount : sum), 0);
 
-      {/* Header */}
-      <View style={{ backgroundColor: "#fff", paddingTop: insets.top + 20, paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" }}>
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>Payments</Text>
-        <Text style={{ fontSize: 16, color: "#6B7280", marginTop: 4 }}>
-          {totalPaid}/{payments.length} paid
-        </Text>
-      </View>
+    return (
+        <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+            <StatusBar style="dark" />
 
-      {/* Loading */}
-      {loading && (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#2563EB" />
-          <Text style={{ color: "#6B7280", marginTop: 12 }}>Loading payments...</Text>
-        </View>
-      )}
-
-      {!loading && (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
-          {/* Summary Cards */}
-          <View style={{ padding: 20 }}>
-            <View style={{ flexDirection: "row", marginBottom: 20 }}>
-              <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1, marginRight: 12 }}>
-                <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Total Paid</Text>
-                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>${totalAmount.toFixed(0)}</Text>
-              </View>
-              <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1 }}>
-                <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Students Paid</Text>
-                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>{totalPaid} / {payments.length}</Text>
-              </View>
-            </View>
-
-            <View style={{ backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1, marginBottom: 20 }}>
-              <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Outstanding Amount</Text>
-              <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>${((payments.length - totalPaid) * 120).toFixed(0)}</Text>
-            </View>
-
-            {/* Filter Buttons */}
-            <View style={{ flexDirection: "row" }}>
-              {[{ key: "all", label: "All" }, { key: "paid", label: "Paid" }, { key: "pending", label: "Unpaid" }].map((filter, index) => (
-                <TouchableOpacity
-                  key={filter.key}
-                  onPress={() => setSelectedFilter(filter.key as FilterType)}
-                  style={{
-                    backgroundColor: selectedFilter === filter.key ? "#2563EB" : "#E5E7EB",
-                    paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, marginRight: index < 2 ? 8 : 0,
-                  }}
-                >
-                  <Text style={{ color: selectedFilter === filter.key ? "#fff" : "#6B7280", fontWeight: "600", fontSize: 14 }}>
-                    {filter.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Payments List */}
-          <View style={{ paddingHorizontal: 20 }}>
-            {filteredPayments.length === 0 && (
-              <View style={{ backgroundColor: "#fff", padding: 40, borderRadius: 12, alignItems: "center" }}>
-                <DollarSign size={40} color="#6B7280" />
-                <Text style={{ fontSize: 16, color: "#6B7280", marginTop: 12, textAlign: "center" }}>
-                  No payments found
+            {/* Header */}
+            <View style={{
+                backgroundColor: "#fff",
+                paddingTop: insets.top + 20,
+                paddingHorizontal: 20,
+                paddingBottom: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: "#E5E7EB",
+            }}>
+                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>Payments</Text>
+                <Text style={{ fontSize: 14, color: "#6B7280", marginTop: 4 }}>
+                    {month} · {totalPaid}/{payments.length} paid
                 </Text>
-              </View>
+            </View>
+
+            {/* Loading */}
+            {loading && (
+                <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                    <ActivityIndicator size="large" color="#2563EB" />
+                    <Text style={{ color: "#6B7280", marginTop: 12 }}>Loading payments…</Text>
+                </View>
             )}
 
-            {filteredPayments.map((item) => (
-              <View key={item.id} style={{ backgroundColor: "#fff", padding: 16, borderRadius: 12, marginBottom: 12, elevation: 1, flexDirection: "row", alignItems: "center" }}>
-                {/* Checkbox */}
-                <TouchableOpacity onPress={() => handleCheckboxPress(item)} style={{ marginRight: 12 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                  {item.status === "paid" ? <CheckSquare size={24} color="#2563EB" /> : <Square size={24} color="#9CA3AF" />}
-                </TouchableOpacity>
+            {!loading && (
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+                >
+                    {/* Summary Cards */}
+                    <View style={{ padding: 20 }}>
+                        <View style={{ flexDirection: "row", marginBottom: 12, gap: 12 }}>
+                            <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1 }}>
+                                <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Collected</Text>
+                                <Text style={{ fontSize: 22, fontWeight: "bold", color: "#10B981" }}>
+                                    LKR {totalAmount.toLocaleString()}
+                                </Text>
+                            </View>
+                            <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1 }}>
+                                <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Outstanding</Text>
+                                <Text style={{ fontSize: 22, fontWeight: "bold", color: "#EF4444" }}>
+                                    LKR {outstanding.toLocaleString()}
+                                </Text>
+                            </View>
+                        </View>
 
-                {/* Avatar */}
-                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "#E5E7EB", justifyContent: "center", alignItems: "center", marginRight: 12 }}>
-                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#6B7280" }}>{item.childName.charAt(0).toUpperCase()}</Text>
+                        <View style={{ backgroundColor: "#fff", padding: 14, borderRadius: 12, elevation: 1, marginBottom: 16 }}>
+                            <Text style={{ fontSize: 13, color: "#6B7280" }}>
+                                Students paid: <Text style={{ fontWeight: "700", color: "#111827" }}>{totalPaid} / {payments.length}</Text>
+                            </Text>
+                        </View>
+
+                        {/* Filter Buttons */}
+                        <View style={{ flexDirection: "row", gap: 8 }}>
+                            {[{ key: "all", label: "All" }, { key: "paid", label: "Paid" }, { key: "pending", label: "Unpaid" }].map((filter) => (
+                                <TouchableOpacity
+                                    key={filter.key}
+                                    onPress={() => setSelectedFilter(filter.key as FilterType)}
+                                    style={{
+                                        backgroundColor: selectedFilter === filter.key ? "#2563EB" : "#E5E7EB",
+                                        paddingHorizontal: 18,
+                                        paddingVertical: 9,
+                                        borderRadius: 8,
+                                    }}
+                                >
+                                    <Text style={{
+                                        color: selectedFilter === filter.key ? "#fff" : "#6B7280",
+                                        fontWeight: "600",
+                                        fontSize: 14,
+                                    }}>
+                                        {filter.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Payments List */}
+                    <View style={{ paddingHorizontal: 20 }}>
+                        {filteredPayments.length === 0 && (
+                            <View style={{ backgroundColor: "#fff", padding: 40, borderRadius: 12, alignItems: "center" }}>
+                                <DollarSign size={40} color="#6B7280" />
+                                <Text style={{ fontSize: 15, color: "#6B7280", marginTop: 12, textAlign: "center" }}>
+                                    No payments found
+                                </Text>
+                            </View>
+                        )}
+
+                        {filteredPayments.map((item) => (
+                            <View
+                                key={item.id}
+                                style={{
+                                    backgroundColor: "#fff",
+                                    padding: 16,
+                                    borderRadius: 12,
+                                    marginBottom: 12,
+                                    elevation: 1,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                }}
+                            >
+                                {/* Checkbox */}
+                                <TouchableOpacity
+                                    onPress={() => handleCheckboxPress(item)}
+                                    style={{ marginRight: 12 }}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    {item.status === "paid"
+                                        ? <CheckSquare size={24} color="#2563EB" />
+                                        : <Square size={24} color="#9CA3AF" />
+                                    }
+                                </TouchableOpacity>
+
+                                {/* Avatar */}
+                                <View style={{
+                                    width: 46, height: 46, borderRadius: 23,
+                                    backgroundColor: item.status === "paid" ? "#DCFCE7" : "#E5E7EB",
+                                    justifyContent: "center", alignItems: "center", marginRight: 12,
+                                }}>
+                                    <Text style={{ fontSize: 18, fontWeight: "bold", color: "#6B7280" }}>
+                                        {item.childName.charAt(0).toUpperCase()}
+                                    </Text>
+                                </View>
+
+                                {/* Info */}
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827" }}>
+                                        {item.childName}
+                                    </Text>
+                                    <Text style={{ fontSize: 13, color: "#6B7280" }}>
+                                        {item.parentName}
+                                    </Text>
+                                    {item.paidAt && (
+                                        <Text style={{ fontSize: 11, color: "#10B981", marginTop: 1 }}>
+                                            Paid {new Date(item.paidAt).toLocaleDateString()}
+                                        </Text>
+                                    )}
+                                </View>
+
+                                {/* Amount + status */}
+                                <View style={{ alignItems: "flex-end" }}>
+                                    <Text style={{ fontSize: 15, fontWeight: "700", color: "#111827" }}>
+                                        LKR {item.amount.toLocaleString()}
+                                    </Text>
+                                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                                        <View style={{
+                                            width: 7, height: 7, borderRadius: 4,
+                                            backgroundColor: item.status === "paid" ? "#10B981" : "#F59E0B",
+                                            marginRight: 5,
+                                        }} />
+                                        <Text style={{ fontSize: 12, color: "#6B7280" }}>
+                                            {item.status === "paid" ? "Paid" : "Pending"}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                </ScrollView>
+            )}
+
+            {/* Confirmation Modal */}
+            <Modal visible={showConfirmation} transparent animationType="fade" onRequestClose={handleCancel}>
+                <View style={{
+                    flex: 1,
+                    backgroundColor: "rgba(0,0,0,0.5)",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: 20,
+                }}>
+                    <View style={{
+                        backgroundColor: "#fff",
+                        borderRadius: 16,
+                        padding: 24,
+                        width: "100%",
+                        maxWidth: 400,
+                        elevation: 5,
+                    }}>
+                        <Text style={{ fontSize: 20, fontWeight: "bold", color: "#111827", marginBottom: 8 }}>
+                            Confirm Payment
+                        </Text>
+                        <Text style={{ fontSize: 15, color: "#6B7280", marginBottom: 20 }}>
+                            Mark LKR {pendingPayment?.amount.toLocaleString()} received from{" "}
+                            <Text style={{ fontWeight: "600", color: "#111827" }}>{pendingPayment?.parentName}</Text>
+                            {" "}for {pendingPayment?.childName}?{"\n\n"}
+                            A push notification will be sent to the parent.
+                        </Text>
+                        <View style={{ flexDirection: "row", gap: 10 }}>
+                            <TouchableOpacity
+                                onPress={handleCancel}
+                                disabled={isSending}
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: "#F3F4F6",
+                                    paddingVertical: 12,
+                                    borderRadius: 8,
+                                    alignItems: "center",
+                                }}
+                            >
+                                <Text style={{ fontSize: 15, fontWeight: "600", color: "#6B7280" }}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={handleConfirm}
+                                disabled={isSending}
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: isSending ? "#93C5FD" : "#2563EB",
+                                    paddingVertical: 12,
+                                    borderRadius: 8,
+                                    alignItems: "center",
+                                }}
+                            >
+                                <Text style={{ fontSize: 15, fontWeight: "600", color: "#fff" }}>
+                                    {isSending ? "Saving…" : "Confirm"}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
-
-                {/* Info */}
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}>{item.childName}</Text>
-                  <Text style={{ fontSize: 13, color: "#6B7280" }}>Parent: {item.parentName}</Text>
-                  {item.childClass !== "" && <Text style={{ fontSize: 13, color: "#9CA3AF" }}>Class: {item.route}</Text>}
-                </View>
-
-                {/* Status dot */}
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: item.status === "paid" ? "#10B981" : "#F59E0B", marginRight: 6 }} />
-                  <Text style={{ fontSize: 14, color: "#6B7280" }}>{item.status === "paid" ? "Paid" : "Unpaid"}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-      )}
-
-      {/* Confirmation Modal */}
-      <Modal visible={showConfirmation} transparent animationType="fade" onRequestClose={handleCancel}>
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 }}>
-          <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 24, width: "100%", maxWidth: 400, elevation: 5 }}>
-            <Text style={{ fontSize: 20, fontWeight: "bold", color: "#111827", marginBottom: 12 }}>Payment Received</Text>
-            <Text style={{ fontSize: 16, color: "#6B7280", marginBottom: 24 }}>
-              Send payment confirmation to {pendingPayment?.parentName} for {pendingPayment?.childName}?
-            </Text>
-            <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity onPress={handleCancel} disabled={isSending} style={{ flex: 1, backgroundColor: "#F3F4F6", paddingVertical: 12, borderRadius: 8, alignItems: "center", marginRight: 12 }}>
-                <Text style={{ fontSize: 16, fontWeight: "600", color: "#6B7280" }}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleConfirm} disabled={isSending} style={{ flex: 1, backgroundColor: isSending ? "#93C5FD" : "#2563EB", paddingVertical: 12, borderRadius: 8, alignItems: "center" }}>
-                <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>{isSending ? "Sending..." : "OK"}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+            </Modal>
         </View>
-      </Modal>
-    </View>
-  );
+    );
 }

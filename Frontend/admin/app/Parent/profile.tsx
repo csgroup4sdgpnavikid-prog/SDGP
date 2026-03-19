@@ -2,11 +2,12 @@
 // This component displays the parent profile information.
 // It allows updating personal details, profile image,
 // and changing the account password.
-import { Ionicons } from "@expo/vector-icons"; // Importing necessary libraries for UI components,
-import * as ImagePicker from "expo-image-picker"; // navigation, icons and image picker functionality
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -15,77 +16,94 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAuth } from "../../context/AuthContext";
+import { db, auth, storage } from "../../firebaseConfig";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import "firebase/auth";
 
-// State variables used to store profile data
-// Includes image, contact details, and password fields
 export default function ParentProfileCard() {
   const router = useRouter();
-  // Stores selected profile image from device gallery
+  const { user, logout } = useAuth();
   const [image, setImage] = useState<string | null>(null);
-  const [name, setName] = useState("Jane Doe");
-  const [email, setEmail] = useState("jane.doe@email.com");
-  const [phone, setPhone] = useState("+1 234 567 890");
-  const [vanNumber, setVanNumber] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  // Function to open device gallery
-  // Allows user to select and crop a profile image
+  useEffect(() => {
+    if (!user) return;
+    const loadProfile = async () => {
+      try {
+        const snap = await getDoc(doc(db, "parents", user.uid));
+        if (snap.exists()) {
+          const d = snap.data();
+          setName(d.name || "");
+          setEmail(d.email || "");
+          setPhone(d.phone || "");
+          if (d.photoUrl) setImage(d.photoUrl);
+        }
+      } catch (err) {
+        console.error("Error loading parent profile:", err);
+      }
+    };
+    loadProfile();
+  }, [user]);
+
+  const uploadImageToStorage = async (localUri: string): Promise<string> => {
+    const uid = auth.currentUser!.uid;
+    const storageRef = ref(storage, `profileImages/parents/${uid}`);
+    const response = await fetch(localUri);
+    const blob = await response.blob();
+    await uploadBytes(storageRef, blob);
+    return getDownloadURL(storageRef);
+  };
+
   const pickImage = async () => {
-    // TODO: Add option to capture image directly from camera
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "Camera roll access is needed to change your photo.");
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      quality: 0.8,
     });
-
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const localUri = result.assets[0].uri;
+      setImage(localUri); // show immediately
+      try {
+        const downloadUrl = await uploadImageToStorage(localUri);
+        await updateDoc(doc(db, "parents", auth.currentUser!.uid), { photoUrl: downloadUrl });
+        setImage(downloadUrl);
+      } catch (err) {
+        Alert.alert("Upload Failed", "Could not upload photo. Please try again.");
+        console.error("Profile image upload error:", err);
+      }
     }
   };
 
-  // Handles password change validation and feedback messages
-  const handlePasswordChange = () => {
-    // Ensure all password fields are filled
-    setError("");
-    setSuccess("");
-
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setError("All fields are required.");
-      return;
+  const handleSaveProfile = async () => {
+    if (!name || !phone) { Alert.alert("Error", "Name and phone are required"); return; }
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, "parents", auth.currentUser!.uid), { name, phone });
+      Alert.alert("Success", "Profile saved successfully");
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to save profile");
+    } finally {
+      setSaving(false);
     }
-
-    // Password must be at least 6 characters for security
-    if (newPassword.length < 6) {
-      setError("New password must be at least 6 characters.");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    // If everything is valid
-    setSuccess("Password updated successfully!");
-
-    // Clear fields
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
   };
 
   // Render parent profile interface
-  // Includes profile card, editable inputs, and password section
   return (
     <ScrollView style={styles.screen}>
       <TouchableOpacity
         style={styles.settingsButton}
-        onPress={() => router.push("/Parent/settings")}
+        onPress={() => router.push("/Parent/Settings")}
       >
         <Ionicons name="settings-outline" size={22} color="#374151" />
       </TouchableOpacity>
@@ -149,72 +167,31 @@ export default function ParentProfileCard() {
         />
       </View>
 
-      {/* Registered Van Number */}
-      <Text style={styles.labelInput4}>Registered Van number</Text>
-      <View style={styles.inputBox4}>
-        <Ionicons name="car-outline" size={18} color="#6B7280" />
-        <TextInput
-          style={styles.input}
-          value={vanNumber}
-          onChangeText={setVanNumber}
-        />
+      {/* Save Profile Button */}
+      <View style={{ paddingHorizontal: 16, marginTop: 4, marginBottom: 20 }}>
+        <TouchableOpacity style={styles.confirmButton} onPress={handleSaveProfile} disabled={saving}>
+          <Text style={styles.confirmText}>{saving ? "Saving..." : "Save Profile"}</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Section allowing user to update account password */}
-      {/* Change Password Section */}
-      {/* Change Password Section */}
-      <View style={styles.passwordSection}>
-        <Text style={styles.sectionTitle}>Change Password</Text>
-
-        {/* Current Password */}
-        <Text style={styles.labelInput5}>Current Password</Text>
-        <View style={styles.inputBox5}>
-          <Ionicons name="lock-closed-outline" size={18} color="#6B7280" />
-          <TextInput
-            style={styles.input}
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            placeholder="Enter current password"
-            secureTextEntry
-          />
-        </View>
-
-        {/* New Password */}
-        <Text style={styles.labelInput5}>New Password</Text>
-        <View style={styles.inputBox5}>
-          <Ionicons name="lock-closed-outline" size={18} color="#6B7280" />
-          <TextInput
-            style={styles.input}
-            value={newPassword}
-            onChangeText={setNewPassword}
-            placeholder="Enter new password"
-            secureTextEntry
-          />
-        </View>
-
-        {/* Button to submit password update */}
-        {/* Confirm Password */}
-        <Text style={styles.labelInput5}>Confirm Password</Text>
-        <View style={styles.inputBox5}>
-          <Ionicons name="lock-closed-outline" size={18} color="#6B7280" />
-          <TextInput
-            style={styles.input}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Confirm new password"
-            secureTextEntry
-          />
-        </View>
-
-        {/* Confirm Button */}
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        {success ? <Text style={styles.successText}>{success}</Text> : null}
-
+      {/* Change Password — navigates to Settings */}
+      <View style={{ paddingHorizontal: 16, marginBottom: 30 }}>
         <TouchableOpacity
-          style={styles.confirmButton}
-          onPress={handlePasswordChange}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#F3F4F6",
+            borderRadius: 12,
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+          }}
+          onPress={() => router.push("/Parent/Settings")}
         >
-          <Text style={styles.confirmText}>Confirm</Text>
+          <Ionicons name="lock-closed-outline" size={20} color="#374151" />
+          <Text style={{ flex: 1, fontSize: 15, fontWeight: "600", color: "#374151", marginLeft: 12 }}>
+            Change Password
+          </Text>
+          <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
     </ScrollView>

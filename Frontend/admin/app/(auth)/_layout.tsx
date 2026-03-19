@@ -11,6 +11,7 @@ export default function AuthLayout() {
             <Stack.Screen name="ConfirmPassword" />
             <Stack.Screen name="SendMail" />
             <Stack.Screen name="PasswordUpdate" />
+            <Stack.Screen name="TermsAndConditions" />
         </Stack>
     );
 }

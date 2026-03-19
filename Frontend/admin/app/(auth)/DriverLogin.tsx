@@ -11,35 +11,49 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { moderateScale, wp, CONTENT_MAX_WIDTH } from "../../constants/responsive";
 
 export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const { login, isLoading } = useAuth();
   const router = useRouter();
 
   const handleLogin = async () => {
+    setErrorMsg("");
     if (!email || !password) {
-      alert("Please enter both email and password");
+      setErrorMsg("Please enter both email and password");
       return;
     }
     try {
       await login(email, password, 'driver');
-      router.replace('/Driver');
+      // Navigation is handled by AuthContext's auth guard (watches role + user state)
     } catch (error: any) {
-      alert(error.message || "Login failed");
+      const code = error?.code || "";
+      if (code === "auth/user-not-found" || code === "auth/invalid-credential" || code === "auth/wrong-password") {
+        setErrorMsg("Invalid email or password. Please check your credentials.");
+      } else if (code === "auth/too-many-requests") {
+        setErrorMsg("Too many failed attempts. Try again later.");
+      } else if (code === "auth/network-request-failed") {
+        setErrorMsg("No internet connection. Check your network.");
+      } else {
+        setErrorMsg(error.message || "Login failed. Please try again.");
+      }
+      console.error("[DriverLogin] error:", code, error.message);
     }
   };
 
   return (
     <SafeAreaView style={styles.safe}>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.push("/RoleSelection)")}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.push("/RoleSelectionScreen")}>
         <Text style={styles.backText}>‹</Text>
       </TouchableOpacity>
 
       <View style={styles.container}>
+        <View style={{ width: "100%", maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" }}>
         <Text style={styles.title}>
           Welcome back! Glad{"\n"}to see you, Again!
         </Text>
@@ -79,6 +93,12 @@ export default function LoginScreen() {
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
+        {errorMsg ? (
+          <Text style={{ color: "#DC2626", fontSize: 13, marginBottom: 10, textAlign: "center" }}>
+            {errorMsg}
+          </Text>
+        ) : null}
+
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
           <Text style={styles.loginText}>{isLoading ? "Logging in..." : "Login"}</Text>
         </TouchableOpacity>
@@ -117,6 +137,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -129,11 +150,11 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
-    marginLeft: 23,
-    marginTop: 40,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    marginLeft: wp(6),
+    marginTop: moderateScale(40),
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
     borderWidth: 1,
     borderColor: "#E5E7EB",
     justifyContent: "center",
@@ -141,30 +162,30 @@ const styles = StyleSheet.create({
   },
 
   backText: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: "600",
   },
 
   container: {
-    paddingHorizontal: 24,
-    marginTop: 30,
+    paddingHorizontal: wp(6),
+    marginTop: moderateScale(30),
   },
 
   title: {
-    fontSize: 26,
+    fontSize: moderateScale(26),
     fontWeight: "700",
-    marginBottom: 40,
+    marginBottom: moderateScale(40),
     color: "#111827",
   },
 
   input: {
-    height: 52,
+    height: moderateScale(52),
     borderWidth: 1,
     borderColor: "#5AA9E6",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    marginBottom: 18,
+    borderRadius: moderateScale(12),
+    paddingHorizontal: moderateScale(14),
+    fontSize: moderateScale(15),
+    marginBottom: moderateScale(18),
   },
 
   passwordContainer: {
@@ -172,46 +193,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#5AA9E6",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    height: 52,
+    borderRadius: moderateScale(12),
+    paddingHorizontal: moderateScale(14),
+    height: moderateScale(52),
   },
 
   passwordInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: moderateScale(15),
   },
 
   eyeText: {
-    fontSize: 18,
+    fontSize: moderateScale(18),
   },
 
   forgotText: {
     textAlign: "right",
     fontWeight: "600",
-    marginVertical: 14,
-    marginTop: 15,
+    marginVertical: moderateScale(14),
+    marginTop: moderateScale(15),
   },
 
   loginButton: {
-    height: 54,
-    borderRadius: 14,
+    height: moderateScale(54),
+    borderRadius: moderateScale(14),
     backgroundColor: "#5AA9E6",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 35,
+    marginBottom: moderateScale(35),
   },
 
   loginText: {
     color: "#0f0101ff",
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: "700",
   },
 
   orRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: moderateScale(20),
   },
 
   line: {
@@ -221,31 +242,31 @@ const styles = StyleSheet.create({
   },
 
   orText: {
-    marginHorizontal: 10,
+    marginHorizontal: moderateScale(10),
     color: "#6B7280",
-    fontSize: 13,
+    fontSize: moderateScale(13),
     fontWeight: "500",
   },
 
   socialRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: moderateScale(24),
   },
 
   socialButton: {
     flex: 1,
-    height: 52,
+    height: moderateScale(52),
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    borderRadius: 12,
+    borderRadius: moderateScale(12),
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 6,
+    marginHorizontal: moderateScale(6),
   },
 
   socialText: {
-    fontSize: 18,
+    fontSize: moderateScale(18),
     fontWeight: "700",
   },
 

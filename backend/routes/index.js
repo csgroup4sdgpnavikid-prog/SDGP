@@ -1,27 +1,15 @@
-// routes/index.js - Route aggregator
+// routes/index.js - Central route aggregator
 const express = require('express');
 const router = express.Router();
 
-// Import all route modules
-const authRoutes = require('./authRoutes');
-const sosRoutes = require('./sosRoutes');
-const tripRoutes = require('./tripRoutes');
-const locationRoutes = require('./locationRoutes');
-const absenceRoutes = require('./absenceRoutes');
-const ratingRoutes = require('./ratingRoutes');
-const driverRoutes = require('./driverRoutes');
-const healthRoutes = require('./healthRoutes');
-const passwordResetRoutes = require('./passwordResetRoutes');
+const sosRoutes     = require('./sosRoutes');      // POST /api/sos/trigger
+const tripRoutes    = require('./tripRoutes');     // POST /api/trips/start|end|update-stop
+const absenceRoutes = require('./absenceRoutes'); // POST /api/absence/mark|confirm
+const healthRoutes  = require('./healthRoutes');   // GET  /api/health
 
-// Mount routes
-router.use('/auth', authRoutes);           // /api/auth/*
-router.use('/sos', sosRoutes);             // /api/sos/*
-router.use('/trips', tripRoutes);          // /api/trips/*
-router.use('/location', locationRoutes);   // /api/location/*
-router.use('/absence', absenceRoutes);     // /api/absence/*
-router.use('/ratings', ratingRoutes);      // /api/ratings/*
-router.use('/drivers', driverRoutes);      // /api/drivers/*
-router.use('/health', healthRoutes);       // /api/health
-router.use('/auth', passwordResetRoutes);
+router.use('/sos',      sosRoutes);
+router.use('/trips',    tripRoutes);
+router.use('/absence',  absenceRoutes);
+router.use('/health',   healthRoutes);
 
 module.exports = router;

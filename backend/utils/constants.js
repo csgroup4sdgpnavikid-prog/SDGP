@@ -8,15 +8,20 @@ const ROLES = {
 };
 
 // Firestore collection names
+// NOTE: Children are stored as a SUBCOLLECTION — parents/{parentId}/children/{childId}
+// Use: db.collection(COLLECTIONS.PARENTS).doc(parentId).collection('children')
+// Do NOT treat 'children' as a top-level collection.
 const COLLECTIONS = {
     DRIVERS: 'drivers',
     PARENTS: 'parents',
-    CHILDREN: 'children',
     TRIPS: 'trips',
-    VANS: 'vans',
     RATINGS: 'ratings',
     EMERGENCY_ALERTS: 'emergencyAlerts',
     ABSENCES: 'absences',
+    PAYMENTS: 'payments',
+    ROUTES: 'routes',
+    LOCATION_RECORDS: 'locationRecords',
+    NOTIFICATIONS: 'notifications',
 };
 
 // Trip statuses

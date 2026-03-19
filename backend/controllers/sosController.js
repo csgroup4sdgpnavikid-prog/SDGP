@@ -12,12 +12,14 @@ const { validateRequiredFields, isValidLocation } = require('../utils/validators
 const triggerSOS = async (req, res) => {
     const { driverId, message, location } = req.body;
 
-    console.log('Received SOS request:', { driverId, message });
-
-    // Validate required fields
+    // Ownership check — token uid must match the driverId in the request
     if (!driverId) {
         return res.status(400).json({ error: 'Missing required field: driverId' });
     }
+    if (req.user.uid !== driverId) {
+        return res.status(403).json({ error: 'Forbidden: token uid does not match driverId.' });
+    }
+    console.log('Received SOS request:', { driverId, message });
 
     try {
         // Fetch driver document from Firestore
@@ -31,19 +33,28 @@ const triggerSOS = async (req, res) => {
         const driverData = driverDoc.data();
         console.log('Driver data found:', driverData);
 
-        // Get the list of parent IDs associated with this driver
+        // Get parent IDs from driver's associatedParentIds array
         const associatedParentIds = driverData.associatedParentIds || [];
 
-        if (associatedParentIds.length === 0) {
+        // Also query parents by assignedDriverId field — catches any parent not yet in the array
+        const assignedParentsSnap = await db.collection(COLLECTIONS.PARENTS)
+            .where('assignedDriverId', '==', driverId)
+            .get();
+        const assignedParentIds = assignedParentsSnap.docs.map(d => d.id);
+
+        // Union of both sets (deduplicated)
+        const allParentIds = [...new Set([...associatedParentIds, ...assignedParentIds])];
+
+        if (allParentIds.length === 0) {
             console.warn(`No parents associated with driver ID: ${driverId}`);
             return res.status(404).json({ error: 'No parents associated with this driver' });
         }
 
-        console.log(`Found ${associatedParentIds.length} associated parents for driver ${driverId}`);
+        console.log(`Found ${allParentIds.length} parent(s) for driver ${driverId} (${associatedParentIds.length} from array, ${assignedParentIds.length} from query)`);
 
-        // Fetch Expo tokens for associated parents
+        // Fetch Expo tokens for all parents
         const parentDocs = await Promise.all(
-            associatedParentIds.map(parentId =>
+            allParentIds.map(parentId =>
                 db.collection(COLLECTIONS.PARENTS).doc(parentId).get()
             )
         );
@@ -94,13 +105,17 @@ const triggerSOS = async (req, res) => {
             alertId: alertRef.id,
             driverId: driverId,
             driverName: driverData.name || null,
-            parentIds: associatedParentIds,
+            type: 'sos',
+            parentIds: allParentIds,
             message: message || 'Emergency triggered by driver.',
             location: location || null,
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             status: alertStatus,
             notificationsSent: result.success,
             notificationsFailed: result.errors,
+            acknowledgedBy: null,
+            acknowledgedAt: null,
+            resolvedAt: null,
         });
 
         console.log(`Emergency alert logged in Firestore with ID: ${alertRef.id}`);
@@ -108,6 +123,7 @@ const triggerSOS = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'SOS alert sent',
+            parentsNotified: result.success,   // used by DriverAlert.tsx
             sentToCount: result.success,
             failedCount: result.errors,
             loggedAlertId: alertRef.id,
@@ -115,43 +131,8 @@ const triggerSOS = async (req, res) => {
 
     } catch (error) {
         console.error('Error processing SOS request:', error);
-        res.status(500).json({
-            error: 'Internal server error while processing SOS',
-            details: error.message
-        });
+        res.status(500).json({ error: 'Internal server error while processing SOS' });
     }
 };
 
-/**
- * Get emergency alerts history for a driver
- * GET /api/sos/history/:driverId
- */
-const getAlertHistory = async (req, res) => {
-    const { driverId } = req.params;
-    const { limit = 10 } = req.query;
-
-    if (!driverId) {
-        return res.status(400).json({ error: 'Missing driverId' });
-    }
-
-    try {
-        const alertsSnapshot = await db.collection(COLLECTIONS.EMERGENCY_ALERTS)
-            .where('driverId', '==', driverId)
-            .orderBy('timestamp', 'desc')
-            .limit(parseInt(limit))
-            .get();
-
-        const alerts = alertsSnapshot.docs.map(doc => doc.data());
-
-        res.status(200).json({ success: true, alerts });
-
-    } catch (error) {
-        console.error('Error fetching alert history:', error);
-        res.status(500).json({ error: 'Failed to fetch alert history', details: error.message });
-    }
-};
-
-module.exports = {
-    triggerSOS,
-    getAlertHistory,
-};
+module.exports = { triggerSOS };

@@ -12,17 +12,75 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
 } from "react-native";
 
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { auth } from "../../firebaseConfig";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
+
+  const handleUpdate = async () => {
+    setError("");
+    if (!currentPassword) {
+      setError("Please enter your current password");
+      return;
+    }
+    if (!newPassword || !confirmPassword) {
+      setError("Please fill in both password fields");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    // Guard: ensure a user session exists
+    if (!auth.currentUser || !auth.currentUser.email) {
+      setError("No active session. Please log in again.");
+      return;
+    }
+    setLoading(true);
+    try {
+      // Re-authenticate before changing password (Firebase requirement)
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      await updatePassword(auth.currentUser, newPassword);
+
+      // Route to the correct login screen based on role
+      const role = await AsyncStorage.getItem("userRole");
+      Alert.alert("Success", "Password updated successfully", [
+        {
+          text: "OK",
+          onPress: () =>
+            router.replace(role === "parent" ? "/(auth)/ParentLogin" : "/(auth)/DriverLogin"),
+        },
+      ]);
+    } catch (err: any) {
+      if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+        setError("Current password is incorrect");
+      } else {
+        setError(err.message || "Failed to update password");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   return (
@@ -55,8 +113,24 @@ export default function LoginScreen() {
             {/* FORM */}
             <View style={styles.form}>
 
-              {/* New Password */}
+              {/* Current Password */}
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="Current Password"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry={!showCurrentPassword}
+                  style={styles.passwordInput}
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+                  <Ionicons name={showCurrentPassword ? "eye" : "eye-off"} size={22} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+              <View style={{ marginBottom: 18 }} />
 
+              {/* New Password */}
               <View style={styles.passwordContainer}>
                 <TextInput
                   placeholder="New Password"
@@ -114,9 +188,11 @@ export default function LoginScreen() {
 
               </TouchableOpacity>
 
-              {/* Login Button */}
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Update</Text>
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+              {/* Update Button */}
+              <TouchableOpacity style={styles.button} onPress={handleUpdate} disabled={loading}>
+                <Text style={styles.buttonText}>{loading ? "Updating..." : "Update"}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -205,6 +281,13 @@ const styles = StyleSheet.create({
     color: "#0b0909",
     fontWeight: "700",
     fontSize: 16,
+  },
+
+  errorText: {
+    color: "#EF4444",
+    fontSize: 13,
+    marginBottom: 10,
+    textAlign: "center",
   },
 
 });
