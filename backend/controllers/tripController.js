@@ -17,7 +17,112 @@ const { Expo } = require('../config/expo');
  * Start a new trip
  * POST /api/trips/start
  */
+const handleStartTrip = async (req, res) => {
+    const { tripType, location } = req.body;
+    const driverId = req.user.uid;
 
+    try {
+        // Check for existing active trip
+        const existingTrip = await getActiveTrip(driverId);
+        if (existingTrip) {
+            return res.status(400).json({ error: 'You already have an active trip.' });
+        }
+
+        // Get driver data
+        const driverDoc = await db.collection(COLLECTIONS.DRIVERS).doc(driverId).get();
+        if (!driverDoc.exists) {
+            return res.status(404).json({ error: 'Driver not found' });
+        }
+        const driverData = driverDoc.data();
+        const parentIds = driverData.associatedParentIds || [];
+
+        if (parentIds.length === 0) {
+            return res.status(400).json({ error: 'No children assigned to this driver.' });
+        }
+
+        // Fetch all children from associated parents
+        const allStops = [];
+        for (const parentId of parentIds) {
+            const childrenSnap = await db.collection(COLLECTIONS.PARENTS).doc(parentId)
+                .collection('children').where('driverId', '==', driverId).get();
+
+            childrenSnap.forEach(childDoc => {
+                const child = childDoc.data();
+                allStops.push({
+                    childId: childDoc.id,
+                    parentId,
+                    childName: child.name || 'Unknown',
+                    location: child.pickupLocation || child.location || null,
+                    address: child.address || '',
+                });
+            });
+        }
+
+        if (allStops.length === 0) {
+            return res.status(400).json({ error: 'No children found for this driver.' });
+        }
+
+        const driverLocation = location || driverData.location || null;
+
+        // Try route optimization, fall back to unoptimized if it fails
+        let optimizedResult;
+        try {
+            optimizedResult = await generateOptimizedRoute(driverId, allStops, driverLocation, tripType || 'morning');
+        } catch (routeErr) {
+            console.error('Route optimization failed (using unoptimized stops):', routeErr.message);
+            optimizedResult = {
+                optimizedStops: allStops,
+                removedStops: [],
+                absentChildIds: [],
+                totalDistanceKm: 0,
+            };
+        }
+
+        // Create the trip (vanId is optional)
+        const trip = await createTrip(
+            driverId,
+            driverData.vanId || null,
+            optimizedResult.optimizedStops,
+            tripType || 'morning'
+        );
+
+        // Start the trip
+        const startedTrip = await startTrip(trip.tripId, driverLocation);
+
+        // Save active trip ID on driver doc
+        await db.collection(COLLECTIONS.DRIVERS).doc(driverId).update({
+            activeTripId: trip.tripId,
+        });
+
+        // Notify parents
+        if (parentIds.length > 0) {
+            const parentDocs = await Promise.all(
+                parentIds.map(id => db.collection(COLLECTIONS.PARENTS).doc(id).get())
+            );
+            const parentTokens = parentDocs
+                .filter(doc => doc.exists)
+                .map(doc => doc.data().expoPushToken)
+                .filter(token => token && Expo.isExpoPushToken(token));
+
+            if (parentTokens.length > 0) {
+                await sendTripStatusNotification(parentTokens, 'started', driverData.name || 'Driver');
+            }
+        }
+
+        console.log(`Trip started: ${trip.tripId} by driver: ${driverId}`);
+
+        res.status(201).json({
+            success: true,
+            message: 'Trip started successfully',
+            trip: startedTrip,
+            absentChildIds: optimizedResult.absentChildIds || [],
+        });
+
+    } catch (error) {
+        console.error('Error starting trip:', error);
+        res.status(500).json({ error: 'Failed to start trip' });
+    }
+};
 
 /**
  * End a trip

@@ -2,9 +2,15 @@
 const admin = require('firebase-admin');
 
 // Use environment variables for security (loaded from .env file)
+let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+// Strip surrounding quotes if present
+privateKey = privateKey.replace(/^"(.*)"$/, '$1');
+// Convert literal \n to actual newlines
+privateKey = privateKey.replace(/\\n/g, '\n');
+
 const serviceAccount = {
     projectId: process.env.FIREBASE_PROJECT_ID,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    privateKey,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
 };
 
