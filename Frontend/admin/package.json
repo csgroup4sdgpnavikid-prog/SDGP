@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
+    "postinstall": "node -e \"const fs=require('fs'),p=require('path');const e=p.join(__dirname,'.env');if(!fs.existsSync(e)){fs.copyFileSync(p.join(__dirname,'.env.example'),e);console.log('Created .env from .env.example')}\"",
     "start": "cross-env NODE_OPTIONS=--max-old-space-size=4096 expo start --max-workers 2",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "cross-env NODE_OPTIONS=--max-old-space-size=4096 expo run:android",

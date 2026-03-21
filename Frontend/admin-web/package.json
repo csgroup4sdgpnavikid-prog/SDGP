@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "postinstall": "node -e \"const fs=require('fs'),p=require('path');const e=p.join(__dirname,'.env');if(!fs.existsSync(e)){fs.copyFileSync(p.join(__dirname,'.env.example'),e);console.log('Created .env from .env.example')}\"",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview"

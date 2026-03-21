@@ -1,4 +1,10 @@
-require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+// Load .env if it exists, otherwise fall back to .env.example
+const envPath = fs.existsSync(path.join(__dirname, '.env'))
+    ? path.join(__dirname, '.env')
+    : path.join(__dirname, '.env.example');
+require('dotenv').config({ path: envPath });
 const express = require('express');
 const cors = require('cors');
 const { db } = require('./config/firebase');
