@@ -1,0 +1,28 @@
+name: Build Mobile App (Android)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Frontend/admin/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: cd Frontend/admin && npm ci
+
+      - name: Build Android APK
+        run: cd Frontend/admin && eas build --platform android --profile production --non-interactive
