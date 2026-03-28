@@ -122,7 +122,7 @@ export default function StudentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f4f8',
+    backgroundColor: '#f6f9fb',
   },
   header: {
     flexDirection: 'row',
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   },
   blueContent: {
     flex: 1,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#eff2f6',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,

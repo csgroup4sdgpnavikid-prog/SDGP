@@ -198,10 +198,10 @@ export default function AlertsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0f4f8" },
+  container: { flex: 1, backgroundColor: "#5AA9E6"},
   topBar: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start",
-    paddingHorizontal: wp(5), paddingTop: moderateScale(5), paddingBottom: moderateScale(1), backgroundColor: "#f0f4f8",
+    paddingHorizontal: wp(5), paddingTop: moderateScale(5), paddingBottom: moderateScale(1), backgroundColor: "#5AA9E6",
   },
   leftSection: { flexDirection: "column" },
   greeting: { fontSize: moderateScale(26), fontWeight: "bold", color: "#0f172a" },

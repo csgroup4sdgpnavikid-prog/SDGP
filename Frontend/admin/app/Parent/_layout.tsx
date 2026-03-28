@@ -29,7 +29,8 @@ export default function TabLayout() {
           backgroundColor: "#ffffff",
         },
         headerTitleStyle: {
-          color: "#0f172a",
+          color: "#5AA9E6",
+          fontSize:18,
         },
         headerTintColor: "#0f172a",
       }}

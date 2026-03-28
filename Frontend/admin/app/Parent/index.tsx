@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../firebaseConfig";
 import { doc, getDoc, collection, getDocs, onSnapshot } from "firebase/firestore";
+import { Italic } from "lucide-react-native";
 
 interface Child {
   id: string;
@@ -246,10 +247,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   greeting: { fontSize: 16, color: "#64748b" },
-  name: { fontSize: 24, fontWeight: "bold", color: "#0f172a" },
+  name: { fontSize: 24, fontWeight: "bold", color: "#0f172a" , fontStyle:"italic"},
   date: { fontSize: 13, color: "#94a3b8", marginTop: 2 },
   vanCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#5AA9E6", 
     padding: 16,
     borderRadius: 14,
     borderWidth: 1,
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  vanTitle: { fontSize: 17, fontWeight: "700", color: "#0f172a" },
+  vanTitle: { fontSize: 18, fontWeight: "700", color: "#0f172a" },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
