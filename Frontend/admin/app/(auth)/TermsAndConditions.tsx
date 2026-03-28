@@ -190,7 +190,7 @@ export default function TermsAndConditions() {
         </Section>
 
         <View style={styles.endMarker}>
-          <Ionicons name="checkmark-circle" size={28} color="#5AA9E6" />
+          <Ionicons name="checkmark-circle" size={28} color="#3b82f6" />
           <Text style={styles.endText}>End of Terms & Conditions</Text>
         </View>
       </ScrollView>
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
 
   endText: {
     fontSize: 14,
-    color: "#5AA9E6",
+    color: "#3b82f6",
     fontWeight: "600",
   },
 
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     flex: 2,
     height: 50,
     borderRadius: 12,
-    backgroundColor: "#5AA9E6",
+    backgroundColor: "#3b82f6",
     justifyContent: "center",
     alignItems: "center",
   },

@@ -169,7 +169,7 @@ const input = (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#e8f8ffff",
+    backgroundColor: "#f0f4f8",
   },
 
   backButton: {
@@ -180,7 +180,8 @@ const styles = StyleSheet.create({
     height: moderateScale(32),
     borderRadius: moderateScale(16),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#e2e8f0",
+    backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -188,6 +189,7 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: moderateScale(20),
     fontWeight: "600",
+    color: "#0f172a",
   },
 
   scroll: {
@@ -205,13 +207,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: moderateScale(22),
     fontWeight: "700",
-    color: "#222",
+    color: "#0f172a",
     marginTop: moderateScale(20),
   },
 
   subtitle: {
     fontSize: moderateScale(13),
-    color: "#666",
+    color: "#64748b",
     textAlign: "center",
     marginTop: moderateScale(5),
   },
@@ -221,10 +223,14 @@ const styles = StyleSheet.create({
   },
 
   form: {
-    backgroundColor: "#fff",
-    borderRadius: moderateScale(18),
+    backgroundColor: "#ffffff",
+    borderRadius: moderateScale(14),
     padding: moderateScale(18),
-    elevation: 10,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 10,
   },
 
   field: {
@@ -235,17 +241,17 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(13),
     fontWeight: "600",
     marginBottom: moderateScale(6),
-    color: "#333",
+    color: "#334155",
   },
 
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#71d6f3ff",
-    borderRadius: moderateScale(12),
+    borderColor: "#e2e8f0",
+    borderRadius: moderateScale(10),
     paddingHorizontal: moderateScale(12),
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "#ffffff",
   },
 
   input: {
@@ -253,27 +259,32 @@ const styles = StyleSheet.create({
     height: moderateScale(46),
     marginLeft: moderateScale(8),
     fontSize: moderateScale(14),
-    color: "#000",
+    color: "#0f172a",
   },
 
   errorText: {
-    color: "#EF4444",
+    color: "#ef4444",
     fontSize: moderateScale(13),
     marginBottom: moderateScale(10),
     textAlign: "center",
   },
 
   button: {
-    backgroundColor: "#5AA9E6",
+    backgroundColor: "#3b82f6",
     height: moderateScale(48),
-    borderRadius: moderateScale(14),
+    borderRadius: moderateScale(12),
     justifyContent: "center",
     alignItems: "center",
     marginTop: moderateScale(10),
+    shadowColor: "#3b82f6",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   buttonText: {
-    color: "#fff",
+    color: "#ffffff",
     fontSize: moderateScale(16),
     fontWeight: "700",
   },
@@ -285,11 +296,11 @@ const styles = StyleSheet.create({
   },
 
   loginText: {
-    color: "#6B7280",
+    color: "#64748b",
   },
 
   loginNow: {
-    color: "#5AA9E6",
+    color: "#3b82f6",
     fontWeight: "700",
   },
 });

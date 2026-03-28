@@ -289,7 +289,7 @@ export default function SettingsScreen() {
                 <Ionicons
                   name={notifPrefs[key] ? "checkmark-circle" : "ellipse-outline"}
                   size={22}
-                  color={notifPrefs[key] ? "#5AA9E6" : "#9CA3AF"}
+                  color={notifPrefs[key] ? "#3b82f6" : "#9CA3AF"}
                 />
               </TouchableOpacity>
             ))}
@@ -332,13 +332,13 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#f0f4f8",
   },
 
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#020813",
+    color: "#0f172a",
     marginTop: 26,
     marginBottom: 8,
     marginHorizontal: 16,
@@ -348,11 +348,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#ffffff",
     paddingVertical: 9,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: "#e2e8f0",
   },
 
   itemLeft: {
@@ -364,14 +364,14 @@ const styles = StyleSheet.create({
   itemLabel: {
     marginLeft: 8,
     fontSize: 16,
-    color: "#111827",
+    color: "#0f172a",
   },
   itemRight: {
     flexDirection: "row",
     alignItems: "center",
   },
   badge: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#fef3c7",
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -394,18 +394,18 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#5AA9E6",
-    backgroundColor: "#5AA9E6",
+    borderColor: "#3b82f6",
+    backgroundColor: "#3b82f6",
   },
 
   logoutText: {
     marginLeft: 1,
     fontSize: 16,
-    color: "#f1e9e9",
+    color: "#ffffff",
     fontWeight: "500",
   },
   iconCircle: {
-    backgroundColor: "#a5d6fb",
+    backgroundColor: "#3b82f6",
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -416,12 +416,12 @@ const styles = StyleSheet.create({
   dropdownContainer: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#f8fafc",
   },
 
   policyText: {
     fontSize: 14,
-    color: "#374151",
+    color: "#334155",
     marginBottom: 8,
     lineHeight: 20,
   },
@@ -432,40 +432,40 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
     paddingBottom: 36,
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#111827", marginBottom: 4 },
-  modalSub: { fontSize: 13, color: "#6B7280", marginBottom: 16 },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: "#0f172a", marginBottom: 4 },
+  modalSub: { fontSize: 13, color: "#64748b", marginBottom: 16 },
   modalInput: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: "#e2e8f0",
     borderRadius: 10,
     padding: 12,
     fontSize: 15,
     marginBottom: 12,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#f8fafc",
   },
-  modalError: { color: "#EF4444", fontSize: 13, marginBottom: 8 },
+  modalError: { color: "#ef4444", fontSize: 13, marginBottom: 8 },
   modalActions: { flexDirection: "row", gap: 10, marginTop: 4 },
   modalCancel: {
     flex: 1, paddingVertical: 12, borderRadius: 10,
-    borderWidth: 1, borderColor: "#E5E7EB", alignItems: "center",
+    borderWidth: 1, borderColor: "#e2e8f0", alignItems: "center",
   },
-  modalCancelText: { color: "#6B7280", fontWeight: "600" },
+  modalCancelText: { color: "#64748b", fontWeight: "600" },
   modalConfirm: {
     flex: 2, paddingVertical: 12, borderRadius: 10,
-    backgroundColor: "#5AA9E6", alignItems: "center",
+    backgroundColor: "#3b82f6", alignItems: "center",
   },
-  modalConfirmText: { color: "#fff", fontWeight: "700" },
+  modalConfirmText: { color: "#ffffff", fontWeight: "700" },
   notifRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#e2e8f0",
   },
-  notifLabel: { fontSize: 15, color: "#111827" },
+  notifLabel: { fontSize: 15, color: "#0f172a" },
 });
 function SettingItem({
   icon,

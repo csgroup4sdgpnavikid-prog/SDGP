@@ -253,7 +253,7 @@ export default function Payment() {
     const outstanding = payments.reduce((sum, p) => (p.status === "pending" ? sum + p.amount : sum), 0);
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+        <View style={{ flex: 1, backgroundColor: "#f0f4f8" }}>
             <StatusBar style="dark" />
 
             {/* Header */}
@@ -263,10 +263,10 @@ export default function Payment() {
                 paddingHorizontal: 20,
                 paddingBottom: 16,
                 borderBottomWidth: 1,
-                borderBottomColor: "#E5E7EB",
+                borderBottomColor: "#e2e8f0",
             }}>
-                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>Payments</Text>
-                <Text style={{ fontSize: 14, color: "#6B7280", marginTop: 4 }}>
+                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#0f172a" }}>Payments</Text>
+                <Text style={{ fontSize: 14, color: "#64748b", marginTop: 4 }}>
                     {month} · {totalPaid}/{payments.length} paid
                 </Text>
             </View>
@@ -274,8 +274,8 @@ export default function Payment() {
             {/* Loading */}
             {loading && (
                 <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                    <ActivityIndicator size="large" color="#2563EB" />
-                    <Text style={{ color: "#6B7280", marginTop: 12 }}>Loading payments…</Text>
+                    <ActivityIndicator size="large" color="#3b82f6" />
+                    <Text style={{ color: "#64748b", marginTop: 12 }}>Loading payments…</Text>
                 </View>
             )}
 
@@ -287,23 +287,23 @@ export default function Payment() {
                     {/* Summary Cards */}
                     <View style={{ padding: 20 }}>
                         <View style={{ flexDirection: "row", marginBottom: 12, gap: 12 }}>
-                            <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1 }}>
-                                <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Collected</Text>
+                            <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 14, shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: {width: 0, height: 2}, shadowRadius: 10, elevation: 3 }}>
+                                <Text style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>Collected</Text>
                                 <Text style={{ fontSize: 22, fontWeight: "bold", color: "#10B981" }}>
                                     LKR {totalAmount.toLocaleString()}
                                 </Text>
                             </View>
-                            <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 12, elevation: 1 }}>
-                                <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>Outstanding</Text>
+                            <View style={{ flex: 1, backgroundColor: "#fff", padding: 16, borderRadius: 14, shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: {width: 0, height: 2}, shadowRadius: 10, elevation: 3 }}>
+                                <Text style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>Outstanding</Text>
                                 <Text style={{ fontSize: 22, fontWeight: "bold", color: "#EF4444" }}>
                                     LKR {outstanding.toLocaleString()}
                                 </Text>
                             </View>
                         </View>
 
-                        <View style={{ backgroundColor: "#fff", padding: 14, borderRadius: 12, elevation: 1, marginBottom: 16 }}>
-                            <Text style={{ fontSize: 13, color: "#6B7280" }}>
-                                Students paid: <Text style={{ fontWeight: "700", color: "#111827" }}>{totalPaid} / {payments.length}</Text>
+                        <View style={{ backgroundColor: "#fff", padding: 14, borderRadius: 14, shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: {width: 0, height: 2}, shadowRadius: 10, elevation: 3, marginBottom: 16 }}>
+                            <Text style={{ fontSize: 13, color: "#64748b" }}>
+                                Students paid: <Text style={{ fontWeight: "700", color: "#0f172a" }}>{totalPaid} / {payments.length}</Text>
                             </Text>
                         </View>
 
@@ -314,14 +314,14 @@ export default function Payment() {
                                     key={filter.key}
                                     onPress={() => setSelectedFilter(filter.key as FilterType)}
                                     style={{
-                                        backgroundColor: selectedFilter === filter.key ? "#2563EB" : "#E5E7EB",
+                                        backgroundColor: selectedFilter === filter.key ? "#3b82f6" : "#e2e8f0",
                                         paddingHorizontal: 18,
                                         paddingVertical: 9,
                                         borderRadius: 8,
                                     }}
                                 >
                                     <Text style={{
-                                        color: selectedFilter === filter.key ? "#fff" : "#6B7280",
+                                        color: selectedFilter === filter.key ? "#fff" : "#64748b",
                                         fontWeight: "600",
                                         fontSize: 14,
                                     }}>
@@ -335,9 +335,9 @@ export default function Payment() {
                     {/* Payments List */}
                     <View style={{ paddingHorizontal: 20 }}>
                         {filteredPayments.length === 0 && (
-                            <View style={{ backgroundColor: "#fff", padding: 40, borderRadius: 12, alignItems: "center" }}>
-                                <DollarSign size={40} color="#6B7280" />
-                                <Text style={{ fontSize: 15, color: "#6B7280", marginTop: 12, textAlign: "center" }}>
+                            <View style={{ backgroundColor: "#fff", padding: 40, borderRadius: 14, alignItems: "center", shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: {width: 0, height: 2}, shadowRadius: 10, elevation: 3 }}>
+                                <DollarSign size={40} color="#64748b" />
+                                <Text style={{ fontSize: 15, color: "#64748b", marginTop: 12, textAlign: "center" }}>
                                     No payments found
                                 </Text>
                             </View>
@@ -349,9 +349,13 @@ export default function Payment() {
                                 style={{
                                     backgroundColor: "#fff",
                                     padding: 16,
-                                    borderRadius: 12,
+                                    borderRadius: 14,
                                     marginBottom: 12,
-                                    elevation: 1,
+                                    shadowColor: '#000',
+                                    shadowOpacity: 0.06,
+                                    shadowOffset: {width: 0, height: 2},
+                                    shadowRadius: 10,
+                                    elevation: 3,
                                     flexDirection: "row",
                                     alignItems: "center",
                                 }}
@@ -363,28 +367,28 @@ export default function Payment() {
                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 >
                                     {item.status === "paid"
-                                        ? <CheckSquare size={24} color="#2563EB" />
-                                        : <Square size={24} color="#9CA3AF" />
+                                        ? <CheckSquare size={24} color="#3b82f6" />
+                                        : <Square size={24} color="#94a3b8" />
                                     }
                                 </TouchableOpacity>
 
                                 {/* Avatar */}
                                 <View style={{
                                     width: 46, height: 46, borderRadius: 23,
-                                    backgroundColor: item.status === "paid" ? "#DCFCE7" : "#E5E7EB",
+                                    backgroundColor: item.status === "paid" ? "#DCFCE7" : "#e2e8f0",
                                     justifyContent: "center", alignItems: "center", marginRight: 12,
                                 }}>
-                                    <Text style={{ fontSize: 18, fontWeight: "bold", color: "#6B7280" }}>
+                                    <Text style={{ fontSize: 18, fontWeight: "bold", color: "#64748b" }}>
                                         {item.childName.charAt(0).toUpperCase()}
                                     </Text>
                                 </View>
 
                                 {/* Info */}
                                 <View style={{ flex: 1 }}>
-                                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827" }}>
+                                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#0f172a" }}>
                                         {item.childName}
                                     </Text>
-                                    <Text style={{ fontSize: 13, color: "#6B7280" }}>
+                                    <Text style={{ fontSize: 13, color: "#64748b" }}>
                                         {item.parentName}
                                     </Text>
                                     {item.paidAt && (
@@ -396,7 +400,7 @@ export default function Payment() {
 
                                 {/* Amount + status */}
                                 <View style={{ alignItems: "flex-end" }}>
-                                    <Text style={{ fontSize: 15, fontWeight: "700", color: "#111827" }}>
+                                    <Text style={{ fontSize: 15, fontWeight: "700", color: "#0f172a" }}>
                                         LKR {item.amount.toLocaleString()}
                                     </Text>
                                     <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
@@ -405,7 +409,7 @@ export default function Payment() {
                                             backgroundColor: item.status === "paid" ? "#10B981" : "#F59E0B",
                                             marginRight: 5,
                                         }} />
-                                        <Text style={{ fontSize: 12, color: "#6B7280" }}>
+                                        <Text style={{ fontSize: 12, color: "#64748b" }}>
                                             {item.status === "paid" ? "Paid" : "Pending"}
                                         </Text>
                                     </View>
@@ -433,12 +437,12 @@ export default function Payment() {
                         maxWidth: 400,
                         elevation: 5,
                     }}>
-                        <Text style={{ fontSize: 20, fontWeight: "bold", color: "#111827", marginBottom: 8 }}>
+                        <Text style={{ fontSize: 20, fontWeight: "bold", color: "#0f172a", marginBottom: 8 }}>
                             Confirm Payment
                         </Text>
-                        <Text style={{ fontSize: 15, color: "#6B7280", marginBottom: 20 }}>
+                        <Text style={{ fontSize: 15, color: "#64748b", marginBottom: 20 }}>
                             Mark LKR {pendingPayment?.amount.toLocaleString()} received from{" "}
-                            <Text style={{ fontWeight: "600", color: "#111827" }}>{pendingPayment?.parentName}</Text>
+                            <Text style={{ fontWeight: "600", color: "#0f172a" }}>{pendingPayment?.parentName}</Text>
                             {" "}for {pendingPayment?.childName}?{"\n\n"}
                             A push notification will be sent to the parent.
                         </Text>
@@ -448,20 +452,20 @@ export default function Payment() {
                                 disabled={isSending}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: "#F3F4F6",
+                                    backgroundColor: "#f8fafc",
                                     paddingVertical: 12,
                                     borderRadius: 8,
                                     alignItems: "center",
                                 }}
                             >
-                                <Text style={{ fontSize: 15, fontWeight: "600", color: "#6B7280" }}>Cancel</Text>
+                                <Text style={{ fontSize: 15, fontWeight: "600", color: "#64748b" }}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={handleConfirm}
                                 disabled={isSending}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: isSending ? "#93C5FD" : "#2563EB",
+                                    backgroundColor: isSending ? "#93C5FD" : "#3b82f6",
                                     paddingVertical: 12,
                                     borderRadius: 8,
                                     alignItems: "center",

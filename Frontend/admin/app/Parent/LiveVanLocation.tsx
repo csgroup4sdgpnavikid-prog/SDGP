@@ -66,7 +66,7 @@ function MapPickerModal({
           {pin && (
             <TouchableOpacity
               onPress={() => onConfirm({ lat: pin.lat, lng: pin.lng, address: `${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)}` })}
-              style={{ backgroundColor: "#5AA9E6", paddingHorizontal: moderateScale(14), paddingVertical: moderateScale(8), borderRadius: moderateScale(8) }}
+              style={{ backgroundColor: "#3b82f6", paddingHorizontal: moderateScale(14), paddingVertical: moderateScale(8), borderRadius: moderateScale(8) }}
             >
               <Text style={{ color: "#fff", fontWeight: "700", fontSize: moderateScale(14) }}>Confirm</Text>
             </TouchableOpacity>
@@ -92,7 +92,7 @@ function MapPickerModal({
             }
           }}
         >
-          {pin && <Marker coordinate={{ latitude: pin.lat, longitude: pin.lng }} pinColor="#5AA9E6" />}
+          {pin && <Marker coordinate={{ latitude: pin.lat, longitude: pin.lng }} pinColor="#3b82f6" />}
         </MapView>
       </SafeAreaView>
     </Modal>
@@ -460,7 +460,7 @@ export default function LiveVanLocation() {
           <Text style={styles.headerSub}>Choose the route your child's van uses</Text>
         </View>
         {loading ? (
-          <ActivityIndicator style={{ marginTop: moderateScale(40) }} color="#5AA9E6" />
+          <ActivityIndicator style={{ marginTop: moderateScale(40) }} color="#3b82f6" />
         ) : routes.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="map-outline" size={moderateScale(56)} color="#D1D5DB" />
@@ -473,7 +473,7 @@ export default function LiveVanLocation() {
               <TouchableOpacity key={route.id} style={styles.card} onPress={() => handleSelectRoute(route)}>
                 <View style={styles.cardRow}>
                   <View style={styles.cardIcon}>
-                    <Ionicons name="navigate-outline" size={moderateScale(22)} color="#5AA9E6" />
+                    <Ionicons name="navigate-outline" size={moderateScale(22)} color="#3b82f6" />
                   </View>
                   <View style={styles.cardInfo}>
                     <Text style={styles.cardTitle}>{route.name}</Text>
@@ -505,7 +505,7 @@ export default function LiveVanLocation() {
           <Text style={styles.headerSub}>{selectedRoute?.name}</Text>
         </View>
         {loading ? (
-          <ActivityIndicator style={{ marginTop: moderateScale(40) }} color="#5AA9E6" />
+          <ActivityIndicator style={{ marginTop: moderateScale(40) }} color="#3b82f6" />
         ) : drivers.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="car-outline" size={moderateScale(56)} color="#D1D5DB" />
@@ -519,7 +519,7 @@ export default function LiveVanLocation() {
                 <TouchableOpacity key={driver.id} style={styles.card} onPress={() => handleSelectDriver(driver)}>
                   <View style={styles.cardRow}>
                     <View style={styles.driverAvatar}>
-                      <Ionicons name="person" size={moderateScale(22)} color="#5AA9E6" />
+                      <Ionicons name="person" size={moderateScale(22)} color="#3b82f6" />
                     </View>
                     <View style={styles.cardInfo}>
                       <Text style={styles.cardTitle}>{driver.name}</Text>
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff", marginBottom: moderateScale(12),
   },
   primaryButton: {
-    backgroundColor: "#5AA9E6", paddingVertical: moderateScale(14),
+    backgroundColor: "#3b82f6", paddingVertical: moderateScale(14),
     borderRadius: moderateScale(12), alignItems: "center", marginTop: moderateScale(4),
   },
   primaryButtonText: { color: "#fff", fontWeight: "700", fontSize: moderateScale(15) },

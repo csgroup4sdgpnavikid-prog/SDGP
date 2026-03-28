@@ -27,38 +27,44 @@ export default function DriverHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f0f4f8',
   },
   header: {
     padding: 20,
-    backgroundColor: '#A1CEDC',
+    backgroundColor: '#0f172a',
   },
   greeting: {
     fontSize: 16,
-    color: '#555',
+    color: '#94a3b8',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#ffffff',
     marginTop: 4,
   },
   content: {
     padding: 20,
   },
   card: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ffffff',
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 10,
+    elevation: 3,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#0f172a',
     marginBottom: 8,
   },
   cardText: {
     fontSize: 14,
-    color: '#666',
+    color: '#64748b',
   },
 });
