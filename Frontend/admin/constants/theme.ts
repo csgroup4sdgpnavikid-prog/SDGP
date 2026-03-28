@@ -5,16 +5,16 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
+const tintColorLight = '#3b82f6';
 const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#0f172a',
+    background: '#f0f4f8',
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: '#64748b',
+    tabIconDefault: '#94a3b8',
     tabIconSelected: tintColorLight,
   },
   dark: {
@@ -51,3 +51,59 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const AppTheme = {
+  // Primary
+  primary:      '#3b82f6',
+  primaryDark:  '#2563eb',
+  primaryDeep:  '#1d4ed8',
+  primaryLight: '#dbeafe',
+  primaryFaint: '#eff6ff',
+
+  // Accent (purple)
+  accent:       '#8b5cf6',
+  accentLight:  '#ede9fe',
+
+  // Navy (headers, dark sections)
+  navy:         '#0f172a',
+  navyLight:    '#1e293b',
+  navyMid:      '#334155',
+
+  // Backgrounds
+  background:   '#f0f4f8',
+  surface:      '#ffffff',
+
+  // Text
+  textHeading:  '#0f172a',
+  textBody:     '#334155',
+  textSecondary:'#64748b',
+  textMuted:    '#94a3b8',
+  textOnDark:   '#ffffff',
+
+  // Semantic
+  success:      '#22c55e',
+  successLight: '#dcfce7',
+  danger:       '#ef4444',
+  dangerLight:  '#fee2e2',
+  warning:      '#f59e0b',
+  warningLight: '#fef3c7',
+
+  // Borders
+  border:       '#e2e8f0',
+  borderLight:  '#f1f5f9',
+
+  // Shadow preset (spread into StyleSheet)
+  cardShadow: {
+    shadowColor:   '#000' as string,
+    shadowOffset:  { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius:  10,
+    elevation:     3,
+  },
+
+  // Radii
+  radiusCard:   14,
+  radiusInput:  10,
+  radiusBadge:  20,
+  radiusButton: 12,
+};

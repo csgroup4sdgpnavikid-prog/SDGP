@@ -203,7 +203,7 @@ export default function DriverAlert() {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+        <View style={{ flex: 1, backgroundColor: "#f0f4f8" }}>
             <StatusBar style="dark" />
 
             <View
@@ -213,10 +213,10 @@ export default function DriverAlert() {
                     paddingHorizontal: wp(5),
                     paddingBottom: moderateScale(16),
                     borderBottomWidth: 1,
-                    borderBottomColor: "#E5E7EB",
+                    borderBottomColor: "#e2e8f0",
                 }}
             >
-                <Text style={{ fontSize: moderateScale(24), fontWeight: "bold", color: "#111827" }}>
+                <Text style={{ fontSize: moderateScale(24), fontWeight: "bold", color: "#0f172a" }}>
                     Send Parent Alert
                 </Text>
 
@@ -230,7 +230,7 @@ export default function DriverAlert() {
                             marginRight: moderateScale(6),
                         }}
                     />
-                    <Text style={{ fontSize: moderateScale(14), color: "#6B7280" }}>
+                    <Text style={{ fontSize: moderateScale(14), color: "#64748b" }}>
                         {expoPushToken ? "Connected to notification service" : "Not connected"}
                     </Text>
                 </View>
@@ -242,7 +242,7 @@ export default function DriverAlert() {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={{ padding: wp(5) }}>
-                    <Text style={{ fontSize: moderateScale(22), fontWeight: "bold", color: "#111827", marginBottom: moderateScale(20) }}>
+                    <Text style={{ fontSize: moderateScale(22), fontWeight: "bold", color: "#0f172a", marginBottom: moderateScale(20) }}>
                         Quick Alerts
                     </Text>
 
@@ -257,22 +257,22 @@ export default function DriverAlert() {
                                     disabled={isSending}
                                     style={{
                                         width: "48%",
-                                        backgroundColor: isSelected ? "#EFF6FF" : "#F3F4F6",
+                                        backgroundColor: isSelected ? "#eff6ff" : "#ffffff",
                                         borderRadius: moderateScale(16),
                                         padding: moderateScale(20),
                                         marginBottom: moderateScale(16),
                                         alignItems: "center",
                                         justifyContent: "center",
                                         minHeight: moderateScale(140),
-                                        borderWidth: isSelected ? 2 : 0,
-                                        borderColor: "#2563EB",
+                                        borderWidth: isSelected ? 2 : 1,
+                                        borderColor: isSelected ? "#3b82f6" : "#e2e8f0",
                                         opacity: isSending ? 0.5 : 1,
                                     }}
                                 >
                                     <View style={{ marginBottom: moderateScale(12) }}>
-                                        <Icon size={moderateScale(40)} color="#2563EB" strokeWidth={2} />
+                                        <Icon size={moderateScale(40)} color="#3b82f6" strokeWidth={2} />
                                     </View>
-                                    <Text style={{ fontSize: moderateScale(15), fontWeight: "500", color: "#111827", textAlign: "center" }}>
+                                    <Text style={{ fontSize: moderateScale(15), fontWeight: "500", color: "#0f172a", textAlign: "center" }}>
                                         {alert.text}
                                     </Text>
                                 </TouchableOpacity>
@@ -281,15 +281,15 @@ export default function DriverAlert() {
                     </View>
 
                     <View style={{ marginTop: moderateScale(24) }}>
-                        <Text style={{ fontSize: moderateScale(16), color: "#111827", marginBottom: moderateScale(12), fontWeight: "500" }}>
+                        <Text style={{ fontSize: moderateScale(16), color: "#0f172a", marginBottom: moderateScale(12), fontWeight: "500" }}>
                             Type a custom message below.
                         </Text>
 
-                        <View style={{ backgroundColor: "#F3F4F6", borderRadius: moderateScale(12), padding: moderateScale(16), minHeight: moderateScale(120) }}>
+                        <View style={{ backgroundColor: "#ffffff", borderWidth: 1, borderColor: "#e2e8f0", borderRadius: moderateScale(14), padding: moderateScale(16), minHeight: moderateScale(120) }}>
                             <TextInput
-                                style={{ fontSize: moderateScale(15), color: "#111827", flex: 1, textAlignVertical: "top" }}
+                                style={{ fontSize: moderateScale(15), color: "#0f172a", flex: 1, textAlignVertical: "top" }}
                                 placeholder="Custom Message."
-                                placeholderTextColor="#9CA3AF"
+                                placeholderTextColor="#94a3b8"
                                 multiline
                                 maxLength={maxLength}
                                 value={customMessage}
@@ -299,7 +299,7 @@ export default function DriverAlert() {
                                     if (text.trim()) setSelectedAlert(null);
                                 }}
                             />
-                            <Text style={{ fontSize: moderateScale(14), color: "#6B7280", textAlign: "right", marginTop: moderateScale(8) }}>
+                            <Text style={{ fontSize: moderateScale(14), color: "#64748b", textAlign: "right", marginTop: moderateScale(8) }}>
                                 {customMessage.length}/{maxLength}
                             </Text>
                         </View>
@@ -321,15 +321,15 @@ export default function DriverAlert() {
                     paddingTop: moderateScale(16),
                     paddingBottom: insets.bottom + moderateScale(16),
                     borderTopWidth: 1,
-                    borderTopColor: "#E5E7EB",
+                    borderTopColor: "#e2e8f0",
                 }}
             >
                 <TouchableOpacity
                     onPress={handleSendAlert}
                     disabled={isSending}
                     style={{
-                        backgroundColor: isSending ? "#9CA3AF" : "#2563EB",
-                        borderRadius: moderateScale(12),
+                        backgroundColor: isSending ? "#94a3b8" : "#3b82f6",
+                        borderRadius: moderateScale(14),
                         paddingVertical: moderateScale(16),
                         alignItems: "center",
                         shadowColor: "#000",

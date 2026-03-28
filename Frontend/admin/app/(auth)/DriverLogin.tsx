@@ -146,7 +146,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#f0f4f8",
   },
 
   backButton: {
@@ -156,7 +156,8 @@ const styles = StyleSheet.create({
     height: moderateScale(32),
     borderRadius: moderateScale(16),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#e2e8f0",
+    backgroundColor: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -164,6 +165,7 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: moderateScale(20),
     fontWeight: "600",
+    color: "#0f172a",
   },
 
   container: {
@@ -175,27 +177,29 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(26),
     fontWeight: "700",
     marginBottom: moderateScale(40),
-    color: "#111827",
+    color: "#0f172a",
   },
 
   input: {
     height: moderateScale(52),
     borderWidth: 1,
-    borderColor: "#5AA9E6",
-    borderRadius: moderateScale(12),
+    borderColor: "#e2e8f0",
+    borderRadius: moderateScale(10),
     paddingHorizontal: moderateScale(14),
     fontSize: moderateScale(15),
     marginBottom: moderateScale(18),
+    backgroundColor: "#ffffff",
   },
 
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#5AA9E6",
-    borderRadius: moderateScale(12),
+    borderColor: "#e2e8f0",
+    borderRadius: moderateScale(10),
     paddingHorizontal: moderateScale(14),
     height: moderateScale(52),
+    backgroundColor: "#ffffff",
   },
 
   passwordInput: {
@@ -210,21 +214,27 @@ const styles = StyleSheet.create({
   forgotText: {
     textAlign: "right",
     fontWeight: "600",
+    color: "#3b82f6",
     marginVertical: moderateScale(14),
     marginTop: moderateScale(15),
   },
 
   loginButton: {
     height: moderateScale(54),
-    borderRadius: moderateScale(14),
-    backgroundColor: "#5AA9E6",
+    borderRadius: moderateScale(12),
+    backgroundColor: "#3b82f6",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: moderateScale(35),
+    shadowColor: "#3b82f6",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   loginText: {
-    color: "#0f0101ff",
+    color: "#ffffff",
     fontSize: moderateScale(16),
     fontWeight: "700",
   },
@@ -238,12 +248,12 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#e2e8f0",
   },
 
   orText: {
     marginHorizontal: moderateScale(10),
-    color: "#6B7280",
+    color: "#64748b",
     fontSize: moderateScale(13),
     fontWeight: "500",
   },
@@ -258,11 +268,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: moderateScale(52),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#e2e8f0",
     borderRadius: moderateScale(12),
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: moderateScale(6),
+    backgroundColor: "#ffffff",
   },
 
   socialText: {
@@ -276,11 +287,11 @@ const styles = StyleSheet.create({
   },
 
   registerText: {
-    color: "#6B7280",
+    color: "#64748b",
   },
 
   registerNow: {
-    color: "#5AA9E6",
+    color: "#3b82f6",
     fontWeight: "700",
   },
 });

@@ -231,8 +231,8 @@ const [submittingId, setSubmittingId] = useState<string | null>(null);
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => loadRatings(true)}
-            colors={["#5AA9E6"]}
-            tintColor="#5AA9E6"
+            colors={["#3b82f6"]}
+            tintColor="#3b82f6"
           />
         }
       >
@@ -242,7 +242,7 @@ const [submittingId, setSubmittingId] = useState<string | null>(null);
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Available Routes</Text>
           {routesLoading ? (
-            <ActivityIndicator color="#5AA9E6" style={{ marginVertical: 16 }} />
+            <ActivityIndicator color="#3b82f6" style={{ marginVertical: 16 }} />
           ) : routes.length === 0 ? (
             <View style={styles.emptySmall}>
               <Ionicons name="map-outline" size={32} color="#ccc" />
@@ -263,7 +263,7 @@ const [submittingId, setSubmittingId] = useState<string | null>(null);
                     <Ionicons
                       name="map-outline"
                       size={20}
-                      color={isSelected ? "#fff" : "#5AA9E6"}
+                      color={isSelected ? "#fff" : "#3b82f6"}
                     />
                     <Text style={[styles.routeCardName, isSelected && styles.routeCardNameSelected]}>
                       {route.name}
@@ -285,7 +285,7 @@ const [submittingId, setSubmittingId] = useState<string | null>(null);
               Drivers on {selectedRoute?.name ?? "Route"} — sorted by rating
             </Text>
             {driversLoading ? (
-              <ActivityIndicator color="#5AA9E6" style={{ marginVertical: 16 }} />
+              <ActivityIndicator color="#3b82f6" style={{ marginVertical: 16 }} />
             ) : routeDrivers.length === 0 ? (
               <View style={styles.emptySmall}>
                 <Ionicons name="person-outline" size={32} color="#ccc" />
@@ -316,7 +316,7 @@ const [submittingId, setSubmittingId] = useState<string | null>(null);
                         <Text style={styles.driverName}>{driver.name}</Text>
                         {driver.vanNumber ? (
                           <View style={styles.driverRow}>
-                            <Ionicons name="bus-outline" size={12} color="#555" />
+                            <Ionicons name="bus-outline" size={12} color="#64748b" />
                             <Text style={styles.driverDetail}>{"  "}Van: {driver.vanNumber}</Text>
                           </View>
                         ) : null}
@@ -361,7 +361,7 @@ const [submittingId, setSubmittingId] = useState<string | null>(null);
                           <Ionicons
                             name={isRatingOpen ? "chevron-up" : "star-outline"}
                             size={14}
-                            color={isRatingOpen ? "#5AA9E6" : "#5AA9E6"}
+                            color={isRatingOpen ? "#3b82f6" : "#3b82f6"}
                           />
                           <Text style={[styles.rateBtnText, isRatingOpen && styles.rateBtnTextActive]}>
                             Rate
@@ -375,7 +375,7 @@ const [submittingId, setSubmittingId] = useState<string | null>(null);
                       <View style={styles.ratingPanel}>
                         {cooldown ? (
                           <View style={styles.cooldownBanner}>
-                            <Ionicons name="time-outline" size={15} color="#5AA9E6" />
+                            <Ionicons name="time-outline" size={15} color="#3b82f6" />
                             <Text style={styles.cooldownText}> {cooldown}</Text>
                           </View>
                         ) : (
@@ -444,7 +444,7 @@ const [submittingId, setSubmittingId] = useState<string | null>(null);
         />
 
         {ratingsLoading ? (
-          <ActivityIndicator color="#5AA9E6" style={{ marginVertical: 24 }} />
+          <ActivityIndicator color="#3b82f6" style={{ marginVertical: 24 }} />
         ) : ratingsError ? (
           <View style={styles.empty}>
             <Ionicons name="cloud-offline-outline" size={44} color="#ccc" />
@@ -473,7 +473,7 @@ const [submittingId, setSubmittingId] = useState<string | null>(null);
 function SectionHeader({ icon, title }: { icon: any; title: string }) {
   return (
     <View style={styles.sectionHeader}>
-      <Ionicons name={icon} size={16} color="#5AA9E6" />
+      <Ionicons name={icon} size={16} color="#3b82f6" />
       <Text style={styles.sectionTitle}>{title}</Text>
     </View>
   );
@@ -491,10 +491,10 @@ function StatItem({ number, label }: { number: string; label: string }) {
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F8FAFC" },
+  safe: { flex: 1, backgroundColor: "#f0f4f8" },
 
   pageHeader: {
-    backgroundColor: "#5AA9E6",
+    backgroundColor: "#0f172a",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
@@ -505,13 +505,13 @@ const styles = StyleSheet.create({
   scroll: { padding: 14, paddingBottom: 48 },
 
   sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#5AA9E6", marginLeft: 7 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#3b82f6", marginLeft: 7 },
 
-  divider: { height: 1, backgroundColor: "#FBF1A1", marginVertical: 24 },
+  divider: { height: 1, backgroundColor: "#e2e8f0", marginVertical: 24 },
 
   card: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     elevation: 2,
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#888",
+    color: "#94a3b8",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     marginBottom: 12,
@@ -533,18 +533,18 @@ const styles = StyleSheet.create({
   routeGrid: { flexDirection: "row", gap: 10, paddingVertical: 4 },
   routeCard: {
     borderWidth: 1.5,
-    borderColor: "#FBF1A1",
-    borderRadius: 12,
+    borderColor: "#e2e8f0",
+    borderRadius: 14,
     padding: 14,
     alignItems: "center",
     width: 130,
-    backgroundColor: "#FFFEF5",
+    backgroundColor: "#ffffff",
   },
-  routeCardSelected: { backgroundColor: "#5AA9E6", borderColor: "#5AA9E6" },
-  routeCardName: { fontSize: 14, fontWeight: "700", color: "#5AA9E6", marginTop: 6, textAlign: "center" },
+  routeCardSelected: { backgroundColor: "#3b82f6", borderColor: "#3b82f6" },
+  routeCardName: { fontSize: 14, fontWeight: "700", color: "#3b82f6", marginTop: 6, textAlign: "center" },
   routeCardNameSelected: { color: "#fff" },
-  routeCardArea: { fontSize: 11, color: "#666", marginTop: 3, textAlign: "center" },
-  routeCardAreaSelected: { color: "#FBF1A1" },
+  routeCardArea: { fontSize: 11, color: "#64748b", marginTop: 3, textAlign: "center" },
+  routeCardAreaSelected: { color: "#dbeafe" },
 
   // Driver block (card + panel)
   driverBlock: {
@@ -562,24 +562,24 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#FBF1A1",
+    backgroundColor: "#dbeafe",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  rankText: { fontSize: 13, fontWeight: "700", color: "#5AA9E6" },
+  rankText: { fontSize: 13, fontWeight: "700", color: "#3b82f6" },
   driverInfo: { flex: 1 },
-  driverName: { fontSize: 14, fontWeight: "700", color: "#1F2937", marginBottom: 3 },
+  driverName: { fontSize: 14, fontWeight: "700", color: "#0f172a", marginBottom: 3 },
   driverRow: { flexDirection: "row", alignItems: "center", marginTop: 2 },
-  driverDetail: { fontSize: 12, color: "#555" },
-  ratingText: { fontSize: 12, color: "#333", fontWeight: "600" },
-  ratingCount: { fontSize: 11, color: "#888", fontWeight: "400" },
-  noRatingText: { fontSize: 11, color: "#aaa", marginTop: 2 },
+  driverDetail: { fontSize: 12, color: "#64748b" },
+  ratingText: { fontSize: 12, color: "#334155", fontWeight: "600" },
+  ratingCount: { fontSize: 11, color: "#94a3b8", fontWeight: "400" },
+  noRatingText: { fontSize: 11, color: "#94a3b8", marginTop: 2 },
 
   // Action buttons (Assign + Rate)
   actionBtns: { flexDirection: "column", gap: 6, alignItems: "flex-end" },
   assignBtn: {
-    backgroundColor: "#5AA9E6",
+    backgroundColor: "#3b82f6",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -592,40 +592,40 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     borderWidth: 1.5,
-    borderColor: "#FBF1A1",
+    borderColor: "#e2e8f0",
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
     minWidth: 62,
     justifyContent: "center",
-    backgroundColor: "#FFFEF5",
+    backgroundColor: "#ffffff",
   },
-  rateBtnActive: { backgroundColor: "#FBF1A1", borderColor: "#FBF1A1" },
-  rateBtnText: { fontSize: 12, fontWeight: "700", color: "#5AA9E6" },
-  rateBtnTextActive: { color: "#5AA9E6" },
+  rateBtnActive: { backgroundColor: "#dbeafe", borderColor: "#3b82f6" },
+  rateBtnText: { fontSize: 12, fontWeight: "700", color: "#3b82f6" },
+  rateBtnTextActive: { color: "#3b82f6" },
   btnOff: { backgroundColor: "#9CA3AF", borderColor: "#9CA3AF" },
 
   // Inline rating panel
   ratingPanel: {
-    backgroundColor: "#f8f9ff",
+    backgroundColor: "#f8fafc",
     borderRadius: 10,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#FBF1A1",
+    borderColor: "#e2e8f0",
   },
   panelLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#888",
+    color: "#94a3b8",
     textTransform: "uppercase",
     letterSpacing: 0.7,
     marginBottom: 8,
   },
   starsRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
-  starLabel: { fontSize: 13, fontWeight: "600", color: "#5AA9E6", marginLeft: 8 },
+  starLabel: { fontSize: 13, fontWeight: "600", color: "#3b82f6", marginLeft: 8 },
   submitBtn: {
-    backgroundColor: "#5AA9E6",
+    backgroundColor: "#3b82f6",
     borderRadius: 10,
     paddingVertical: 11,
     alignItems: "center",
@@ -637,33 +637,33 @@ const styles = StyleSheet.create({
   cooldownBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FBF1A1",
+    backgroundColor: "#fef3c7",
     borderRadius: 8,
     padding: 10,
   },
-  cooldownText: { fontSize: 13, color: "#5AA9E6", flex: 1, flexWrap: "wrap" },
+  cooldownText: { fontSize: 13, color: "#f59e0b", flex: 1, flexWrap: "wrap" },
 
   // Empty states
   emptySmall: { alignItems: "center", paddingVertical: 20 },
-  emptySmallText: { color: "#aaa", fontSize: 13, marginTop: 8, textAlign: "center", lineHeight: 20 },
+  emptySmallText: { color: "#94a3b8", fontSize: 13, marginTop: 8, textAlign: "center", lineHeight: 20 },
 
   // Stats bar
   statsBar: {
     flexDirection: "row",
-    backgroundColor: "#5AA9E6",
-    borderRadius: 12,
+    backgroundColor: "#0f172a",
+    borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     justifyContent: "space-around",
   },
   stat: { alignItems: "center" },
   statNum: { fontSize: 20, fontWeight: "800", color: "#fff" },
-  statLbl: { fontSize: 11, color: "#FBF1A1", marginTop: 2 },
+  statLbl: { fontSize: 11, color: "#94a3b8", marginTop: 2 },
 
   empty: { alignItems: "center", paddingVertical: 32 },
-  emptyText: { color: "#999", fontSize: 14, marginTop: 10, textAlign: "center" },
+  emptyText: { color: "#94a3b8", fontSize: 14, marginTop: 10, textAlign: "center" },
   retryBtn: {
-    backgroundColor: "#5AA9E6",
+    backgroundColor: "#3b82f6",
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 8,

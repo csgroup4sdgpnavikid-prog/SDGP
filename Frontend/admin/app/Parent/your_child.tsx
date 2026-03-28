@@ -168,7 +168,7 @@ function MapPickerModal({
         {/* Header */}
         <View style={mpStyles.header}>
           <TouchableOpacity onPress={onClose} style={mpStyles.closeBtn}>
-            <Ionicons name="arrow-back" size={22} color="#111827" />
+            <Ionicons name="arrow-back" size={22} color="#0f172a" />
           </TouchableOpacity>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={mpStyles.headerTitle}>{title}</Text>
@@ -220,7 +220,7 @@ function MapPickerModal({
                 <Ionicons name="location" size={18} color="#EF4444" />
                 <View style={{ flex: 1, marginLeft: 8 }}>
                   {geocoding
-                    ? <ActivityIndicator size="small" color="#6B7280" />
+                    ? <ActivityIndicator size="small" color="#64748b" />
                     : <Text style={mpStyles.addressText} numberOfLines={2}>{resolvedAddress}</Text>
                   }
                   <Text style={mpStyles.coordText}>
@@ -395,7 +395,7 @@ export default function YourChild() {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: "#6B7280" }}>Loading...</Text>
+        <Text style={{ color: "#64748b" }}>Loading...</Text>
       </View>
     );
   }
@@ -484,7 +484,7 @@ export default function YourChild() {
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => setDropAddress(null)}>
-                  <Ionicons name="close-circle" size={18} color="#D1D5DB" />
+                  <Ionicons name="close-circle" size={18} color="#e2e8f0" />
                 </TouchableOpacity>
               </View>
             )}
@@ -518,7 +518,7 @@ export default function YourChild() {
         {/* CHILDREN LIST */}
         {children.length === 0 && !showAddForm ? (
           <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={56} color="#D1D5DB" />
+            <Ionicons name="people-outline" size={56} color="#e2e8f0" />
             <Text style={styles.emptyText}>No children added yet</Text>
             <Text style={styles.emptySubtext}>Tap "Add Child" to get started</Text>
           </View>
@@ -529,7 +529,7 @@ export default function YourChild() {
               <View key={child.id} style={styles.childCard}>
                 <View style={styles.childCardTop}>
                   <View style={styles.childAvatar}>
-                    <Ionicons name="person" size={26} color="#5AA9E6" />
+                    <Ionicons name="person" size={26} color="#3b82f6" />
                   </View>
                   <View style={styles.childDetails}>
                     <Text style={styles.childName}>{child.name}</Text>
@@ -556,15 +556,15 @@ export default function YourChild() {
                   <Text style={[styles.locationRowText, !child.homeAddress && { color: "#F59E0B" }]} numberOfLines={1}>
                     {child.homeAddress?.address || "⚠ Drop location not set — tap to add"}
                   </Text>
-                  <Ionicons name="map-outline" size={14} color="#9CA3AF" />
+                  <Ionicons name="map-outline" size={14} color="#94a3b8" />
                 </TouchableOpacity>
 
                 {assignedDriver && (
                   <View style={styles.driverRow}>
-                    <Ionicons name="car-outline" size={14} color="#6B7280" />
+                    <Ionicons name="car-outline" size={14} color="#64748b" />
                     <Text style={styles.driverRowText}>{assignedDriver.name}</Text>
                     <TouchableOpacity onPress={() => Linking.openURL(`tel:${assignedDriver.phone}`)}>
-                      <Ionicons name="call-outline" size={16} color="#5AA9E6" />
+                      <Ionicons name="call-outline" size={16} color="#3b82f6" />
                     </TouchableOpacity>
                   </View>
                 )}
@@ -659,26 +659,26 @@ export default function YourChild() {
 // Styles
 // ─────────────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#fff", padding: 16 },
+  screen: { flex: 1, backgroundColor: "#f0f4f8", padding: 16 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#111827" },
+  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#0f172a" },
   addButton: {
-    flexDirection: "row", alignItems: "center", backgroundColor: "#5AA9E6",
+    flexDirection: "row", alignItems: "center", backgroundColor: "#3b82f6",
     paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, gap: 4,
   },
   addButtonText: { color: "#fff", fontWeight: "600", fontSize: 13 },
 
   formCard: {
-    backgroundColor: "#F0F9FF", borderRadius: 16, padding: 16,
-    marginBottom: 16, borderWidth: 1, borderColor: "#BAE6FD",
+    backgroundColor: "#ffffff", borderRadius: 14, padding: 16,
+    marginBottom: 16, borderWidth: 1, borderColor: "#e2e8f0",
   },
-  formTitle: { fontSize: 16, fontWeight: "700", color: "#0369A1", marginBottom: 14 },
-  fieldLabel: { fontSize: 13, fontWeight: "600", color: "#374151", marginBottom: 4 },
+  formTitle: { fontSize: 16, fontWeight: "700", color: "#0f172a", marginBottom: 14 },
+  fieldLabel: { fontSize: 13, fontWeight: "600", color: "#334155", marginBottom: 4 },
   inputBox: { display: "none" },
   inputText: {},
   inputWrap: { marginBottom: 12 },
   input: {
-    borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8,
+    borderWidth: 1, borderColor: "#e2e8f0", borderRadius: 8,
     padding: 10, fontSize: 14, backgroundColor: "#fff",
   },
 
@@ -695,28 +695,29 @@ const styles = StyleSheet.create({
     padding: 10, marginBottom: 4, gap: 2,
   },
   selectedLocAddress: { fontSize: 13, color: "#065F46", fontWeight: "600" },
-  selectedLocCoords: { fontSize: 11, color: "#6B7280", marginTop: 2 },
+  selectedLocCoords: { fontSize: 11, color: "#64748b", marginTop: 2 },
 
   driverChip: {
     paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20,
-    borderWidth: 1, borderColor: "#D1D5DB", marginRight: 8, backgroundColor: "#F9FAFB",
+    borderWidth: 1, borderColor: "#e2e8f0", marginRight: 8, backgroundColor: "#ffffff",
   },
-  driverChipSelected: { backgroundColor: "#5AA9E6", borderColor: "#5AA9E6" },
-  driverChipText: { fontSize: 13, color: "#374151" },
+  driverChipSelected: { backgroundColor: "#3b82f6", borderColor: "#3b82f6" },
+  driverChipText: { fontSize: 13, color: "#334155" },
   driverChipTextSelected: { color: "#fff", fontWeight: "600" },
   saveButton: {
-    backgroundColor: "#5AA9E6", paddingVertical: 12,
+    backgroundColor: "#3b82f6", paddingVertical: 12,
     borderRadius: 10, alignItems: "center", marginTop: 4,
   },
   saveButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
 
   emptyState: { alignItems: "center", paddingVertical: 60 },
-  emptyText: { fontSize: 17, fontWeight: "600", color: "#6B7280", marginTop: 12 },
-  emptySubtext: { fontSize: 13, color: "#9CA3AF", marginTop: 4 },
+  emptyText: { fontSize: 17, fontWeight: "600", color: "#64748b", marginTop: 12 },
+  emptySubtext: { fontSize: 13, color: "#94a3b8", marginTop: 4 },
 
   childCard: {
-    backgroundColor: "#E8F4FD", borderRadius: 16, padding: 14,
-    marginBottom: 12, borderWidth: 1, borderColor: "#CFE7F7",
+    backgroundColor: "#ffffff", borderRadius: 14, padding: 14,
+    marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
   childCardTop: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   childAvatar: {
@@ -725,9 +726,9 @@ const styles = StyleSheet.create({
     alignItems: "center", marginRight: 10,
   },
   childDetails: { flex: 1 },
-  childName: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  childSchool: { fontSize: 13, color: "#6B7280" },
-  childGrade: { fontSize: 12, color: "#9CA3AF" },
+  childName: { fontSize: 16, fontWeight: "700", color: "#0f172a" },
+  childSchool: { fontSize: 13, color: "#64748b" },
+  childGrade: { fontSize: 12, color: "#94a3b8" },
   statusBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20 },
   presentBadge: { backgroundColor: "#DCFCE7" },
   absentBadge: { backgroundColor: "#FEF2F2" },
@@ -742,13 +743,13 @@ const styles = StyleSheet.create({
     marginBottom: 8, borderWidth: 1, borderColor: "#D1FAE5",
   },
   locationRowWarn: { borderColor: "#FDE68A", backgroundColor: "#FFFBEB" },
-  locationRowText: { flex: 1, fontSize: 12, color: "#374151" },
+  locationRowText: { flex: 1, fontSize: 12, color: "#334155" },
 
   driverRow: {
     flexDirection: "row", alignItems: "center",
     gap: 6, marginBottom: 10, paddingLeft: 2,
   },
-  driverRowText: { flex: 1, fontSize: 13, color: "#6B7280" },
+  driverRowText: { flex: 1, fontSize: 13, color: "#64748b" },
 
   attendanceActions: { flexDirection: "row" },
   absentButton: {
@@ -767,39 +768,39 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff", borderTopLeftRadius: 24,
     borderTopRightRadius: 24, padding: 24,
   },
-  modalTitle: { fontSize: 20, fontWeight: "700", color: "#111827", marginBottom: 4 },
-  modalSubtitle: { fontSize: 14, color: "#6B7280", marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: "700", color: "#0f172a", marginBottom: 4 },
+  modalSubtitle: { fontSize: 14, color: "#64748b", marginBottom: 20 },
   absenceTypeButton: {
     paddingVertical: 14, paddingHorizontal: 16, borderRadius: 10,
-    borderWidth: 1, borderColor: "#E5E7EB", marginBottom: 10, backgroundColor: "#F9FAFB",
+    borderWidth: 1, borderColor: "#e2e8f0", marginBottom: 10, backgroundColor: "#ffffff",
   },
-  absenceTypeSelected: { backgroundColor: "#EFF6FF", borderColor: "#5AA9E6" },
-  absenceTypeText: { fontSize: 15, color: "#374151", fontWeight: "500" },
+  absenceTypeSelected: { backgroundColor: "#EFF6FF", borderColor: "#3b82f6" },
+  absenceTypeText: { fontSize: 15, color: "#334155", fontWeight: "500" },
   absenceTypeTextSelected: { color: "#1D4ED8", fontWeight: "700" },
   modalActions: { flexDirection: "row", gap: 10, marginTop: 8 },
   modalCancelButton: {
     flex: 1, paddingVertical: 12, borderRadius: 10,
-    borderWidth: 1, borderColor: "#E5E7EB", alignItems: "center",
+    borderWidth: 1, borderColor: "#e2e8f0", alignItems: "center",
   },
-  modalCancelText: { color: "#6B7280", fontWeight: "600" },
+  modalCancelText: { color: "#64748b", fontWeight: "600" },
   modalConfirmButton: {
     flex: 2, paddingVertical: 12, borderRadius: 10,
-    backgroundColor: "#5AA9E6", alignItems: "center",
+    backgroundColor: "#3b82f6", alignItems: "center",
   },
   modalConfirmText: { color: "#fff", fontWeight: "700" },
 });
 
 // Map Picker Modal styles
 const mpStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: "#f0f4f8" },
   header: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12,
-    backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    backgroundColor: "#ffffff", borderBottomWidth: 1, borderBottomColor: "#e2e8f0",
   },
   closeBtn: { padding: 4 },
-  headerTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  headerSub: { fontSize: 12, color: "#6B7280", marginTop: 1 },
+  headerTitle: { fontSize: 16, fontWeight: "700", color: "#0f172a" },
+  headerSub: { fontSize: 12, color: "#64748b", marginTop: 1 },
   myLocBtn: {
     backgroundColor: "#3B82F6", width: 38, height: 38,
     borderRadius: 19, justifyContent: "center", alignItems: "center",
@@ -818,14 +819,14 @@ const mpStyles = StyleSheet.create({
   },
   hintText: { color: "#fff", fontSize: 13, fontWeight: "600" },
   bottomPanel: {
-    flex: 1, backgroundColor: "#fff",
+    flex: 1, backgroundColor: "#ffffff",
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32,
   },
   addressRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 4 },
-  addressText: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  coordText: { fontSize: 12, color: "#9CA3AF", marginTop: 2 },
-  dragHint: { fontSize: 12, color: "#9CA3AF", marginBottom: 16 },
-  noSelText: { fontSize: 14, color: "#9CA3AF", marginBottom: 16, textAlign: "center" },
+  addressText: { fontSize: 14, fontWeight: "600", color: "#0f172a" },
+  coordText: { fontSize: 12, color: "#94a3b8", marginTop: 2 },
+  dragHint: { fontSize: 12, color: "#94a3b8", marginBottom: 16 },
+  noSelText: { fontSize: 14, color: "#94a3b8", marginBottom: 16, textAlign: "center" },
   confirmBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     backgroundColor: "#10B981", paddingVertical: 14, borderRadius: 14, gap: 8,

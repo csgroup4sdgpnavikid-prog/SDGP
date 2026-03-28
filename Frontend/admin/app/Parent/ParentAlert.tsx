@@ -155,7 +155,7 @@ export default function AlertsScreen() {
       {/* Loading */}
       {loading && (
         <View style={{ alignItems: "center", marginTop: 20 }}>
-          <ActivityIndicator size="small" color="#86c7ef" />
+          <ActivityIndicator size="small" color="#3b82f6" />
           <Text style={{ color: "#888", marginTop: 8, fontSize: 13 }}>Loading alerts...</Text>
         </View>
       )}
@@ -198,34 +198,36 @@ export default function AlertsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFFFFF" },
+  container: { flex: 1, backgroundColor: "#f0f4f8" },
   topBar: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start",
-    paddingHorizontal: wp(5), paddingTop: moderateScale(5), paddingBottom: moderateScale(1), backgroundColor: "#FFFFFF",
+    paddingHorizontal: wp(5), paddingTop: moderateScale(5), paddingBottom: moderateScale(1), backgroundColor: "#f0f4f8",
   },
   leftSection: { flexDirection: "column" },
-  greeting: { fontSize: moderateScale(26), fontWeight: "bold", color: "#000" },
-  date: { fontSize: moderateScale(14), color: "#888", marginTop: moderateScale(4) },
+  greeting: { fontSize: moderateScale(26), fontWeight: "bold", color: "#0f172a" },
+  date: { fontSize: moderateScale(14), color: "#64748b", marginTop: moderateScale(4) },
   bellContainer: { position: "relative" },
   notificationDot: {
     position: "absolute", top: -2, right: -2,
-    width: moderateScale(8), height: moderateScale(8), borderRadius: moderateScale(4), backgroundColor: "red",
+    width: moderateScale(8), height: moderateScale(8), borderRadius: moderateScale(4), backgroundColor: "#ef4444",
   },
   markReadContainer: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingHorizontal: wp(5), marginTop: moderateScale(20),
   },
-  alertTitle: { fontSize: moderateScale(20), fontWeight: "bold" },
-  unreadBadge: { fontSize: moderateScale(14), color: "#E53935", fontWeight: "600" },
-  markReadText: { fontSize: moderateScale(14), color: "#86c7ef" },
+  alertTitle: { fontSize: moderateScale(20), fontWeight: "bold", color: "#0f172a" },
+  unreadBadge: { fontSize: moderateScale(14), color: "#ef4444", fontWeight: "600" },
+  markReadText: { fontSize: moderateScale(14), color: "#3b82f6" },
   alertList: { paddingHorizontal: wp(5), marginTop: moderateScale(10) },
   alertBox: {
-    backgroundColor: "#fbf1a1", padding: moderateScale(14), borderRadius: moderateScale(8),
+    backgroundColor: "#ffffff", padding: moderateScale(14), borderRadius: moderateScale(14),
     marginBottom: moderateScale(10), flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    borderWidth: 1, borderColor: "#e2e8f0",
+    shadowColor: "#000", shadowOpacity: 0.04, shadowOffset: { width: 0, height: 1 }, shadowRadius: 6, elevation: 2,
   },
-  alertTitleText: { fontSize: moderateScale(16) },
-  alertMessage: { fontSize: moderateScale(13), color: "#D40F0F", marginTop: moderateScale(4) },
-  timestampText: { fontSize: moderateScale(11), color: "#999", marginTop: moderateScale(4) },
-  unreadDot: { width: moderateScale(8), height: moderateScale(8), borderRadius: moderateScale(4), backgroundColor: "red", marginLeft: moderateScale(8) },
+  alertTitleText: { fontSize: moderateScale(16), color: "#0f172a" },
+  alertMessage: { fontSize: moderateScale(13), color: "#ef4444", marginTop: moderateScale(4) },
+  timestampText: { fontSize: moderateScale(11), color: "#94a3b8", marginTop: moderateScale(4) },
+  unreadDot: { width: moderateScale(8), height: moderateScale(8), borderRadius: moderateScale(4), backgroundColor: "#3b82f6", marginLeft: moderateScale(8) },
 });
 

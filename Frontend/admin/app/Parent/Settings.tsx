@@ -158,7 +158,7 @@ export default function ParentSettings() {
                 onPress={() => setNotifPrefs((p) => ({ ...p, [key]: !p[key] }))}>
                 <Text style={styles.notifLabel}>{label}</Text>
                 <Ionicons name={notifPrefs[key] ? "checkmark-circle" : "ellipse-outline"}
-                  size={22} color={notifPrefs[key] ? "#86c7ef" : "#9CA3AF"} />
+                  size={22} color={notifPrefs[key] ? "#3b82f6" : "#9CA3AF"} />
               </TouchableOpacity>
             ))}
             <View style={[styles.modalActions, { marginTop: 16 }]}>
@@ -189,28 +189,28 @@ function SettingItem({ icon, label, onPress }: { icon: any; label: string; onPre
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#fff" },
+  screen: { flex: 1, backgroundColor: "#f0f4f8" },
   backBtn: { margin: 16 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#111827", marginTop: 24, marginBottom: 6, marginHorizontal: 16 },
-  item: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#0f172a", marginTop: 24, marginBottom: 6, marginHorizontal: 16 },
+  item: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#e2e8f0" },
   itemLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
-  iconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#86c7ef", justifyContent: "center", alignItems: "center" },
-  itemLabel: { fontSize: 15, color: "#111827" },
-  dropdown: { paddingHorizontal: 20, paddingVertical: 12, backgroundColor: "#F9FAFB" },
-  dropText: { fontSize: 14, color: "#374151", lineHeight: 20 },
-  logoutBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, margin: 24, padding: 14, borderRadius: 12, backgroundColor: "#EF4444" },
+  iconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#3b82f6", justifyContent: "center", alignItems: "center" },
+  itemLabel: { fontSize: 15, color: "#0f172a" },
+  dropdown: { paddingHorizontal: 20, paddingVertical: 12, backgroundColor: "#f8fafc" },
+  dropText: { fontSize: 14, color: "#334155", lineHeight: 20 },
+  logoutBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, margin: 24, padding: 14, borderRadius: 12, backgroundColor: "#ef4444" },
   logoutText: { color: "#fff", fontWeight: "700", fontSize: 15 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 36 },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#111827", marginBottom: 4 },
-  modalSub: { fontSize: 13, color: "#6B7280", marginBottom: 16 },
-  modalInput: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, marginBottom: 12 },
-  modalError: { color: "#EF4444", fontSize: 13, marginBottom: 8 },
+  modalCard: { backgroundColor: "#ffffff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 36 },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: "#0f172a", marginBottom: 4 },
+  modalSub: { fontSize: 13, color: "#64748b", marginBottom: 16 },
+  modalInput: { borderWidth: 1, borderColor: "#e2e8f0", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, marginBottom: 12, backgroundColor: "#ffffff" },
+  modalError: { color: "#ef4444", fontSize: 13, marginBottom: 8 },
   modalActions: { flexDirection: "row", gap: 12 },
-  modalCancel: { flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: "#E5E7EB", alignItems: "center" },
-  modalCancelText: { color: "#6B7280", fontWeight: "600" },
-  modalConfirm: { flex: 2, paddingVertical: 12, borderRadius: 10, backgroundColor: "#86c7ef", alignItems: "center" },
-  modalConfirmText: { color: "#fff", fontWeight: "700" },
-  notifRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
-  notifLabel: { fontSize: 15, color: "#111827" },
+  modalCancel: { flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: "#e2e8f0", alignItems: "center" },
+  modalCancelText: { color: "#64748b", fontWeight: "600" },
+  modalConfirm: { flex: 2, paddingVertical: 12, borderRadius: 10, backgroundColor: "#3b82f6", alignItems: "center" },
+  modalConfirmText: { color: "#ffffff", fontWeight: "700" },
+  notifRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#e2e8f0" },
+  notifLabel: { fontSize: 15, color: "#0f172a" },
 });

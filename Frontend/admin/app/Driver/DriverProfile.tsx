@@ -176,45 +176,45 @@ export default function DriverProfile() {
     label, value, fieldKey, editable = true, multiline = false, keyboardType = "default",
   }) => (
     <View style={{ marginBottom: 16 }}>
-      <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6, fontWeight: "500" }}>{label}</Text>
+      <Text style={{ fontSize: 14, color: "#64748b", marginBottom: 6, fontWeight: "500" }}>{label}</Text>
       {isEditing && editable ? (
         <TextInput
-          style={{ backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 12, fontSize: 16, color: "#111827", minHeight: multiline ? 80 : 44, textAlignVertical: multiline ? "top" : "center" }}
+          style={{ backgroundColor: "#f8fafc", borderWidth: 1, borderColor: "#e2e8f0", borderRadius: 8, padding: 12, fontSize: 16, color: "#0f172a", minHeight: multiline ? 80 : 44, textAlignVertical: multiline ? "top" : "center" }}
           value={editedProfile[fieldKey]}
           onChangeText={(text) => setEditedProfile((prev) => ({ ...prev, [fieldKey]: text }))}
           multiline={multiline}
           keyboardType={keyboardType}
         />
       ) : (
-        <Text style={{ fontSize: 16, color: "#111827", lineHeight: 24 }}>{value}</Text>
+        <Text style={{ fontSize: 16, color: "#0f172a", lineHeight: 24 }}>{value}</Text>
       )}
     </View>
   );
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#F9FAFB" }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={0}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#f0f4f8" }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={0}>
       <StatusBar style="dark" />
 
       {/* Header */}
-      <View style={{ backgroundColor: "#fff", paddingTop: insets.top + 20, paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" }}>
+      <View style={{ backgroundColor: "#fff", paddingTop: insets.top + 20, paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#e2e8f0" }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <View>
-            <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827" }}>Driver Profile</Text>
-            <Text style={{ fontSize: 16, color: "#6B7280", marginTop: 4 }}>Manage your information</Text>
+            <Text style={{ fontSize: 24, fontWeight: "bold", color: "#0f172a" }}>Driver Profile</Text>
+            <Text style={{ fontSize: 16, color: "#64748b", marginTop: 4 }}>Manage your information</Text>
           </View>
           {isEditing ? (
             <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity onPress={handleCancel} style={{ backgroundColor: "#F3F4F6", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flexDirection: "row", alignItems: "center", marginRight: 8 }}>
-                <X size={16} color="#6B7280" />
-                <Text style={{ color: "#6B7280", fontWeight: "500", marginLeft: 4 }}>Cancel</Text>
+              <TouchableOpacity onPress={handleCancel} style={{ backgroundColor: "#dbeafe", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flexDirection: "row", alignItems: "center", marginRight: 8 }}>
+                <X size={16} color="#64748b" />
+                <Text style={{ color: "#64748b", fontWeight: "500", marginLeft: 4 }}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleSave} style={{ backgroundColor: "#2563EB", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity onPress={handleSave} style={{ backgroundColor: "#3b82f6", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flexDirection: "row", alignItems: "center" }}>
                 <Save size={16} color="#fff" />
                 <Text style={{ color: "#fff", fontWeight: "500", marginLeft: 4 }}>Save</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity onPress={() => setIsEditing(true)} style={{ backgroundColor: "#2563EB", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flexDirection: "row", alignItems: "center" }}>
+            <TouchableOpacity onPress={() => setIsEditing(true)} style={{ backgroundColor: "#3b82f6", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flexDirection: "row", alignItems: "center" }}>
               <Edit3 size={16} color="#fff" />
               <Text style={{ color: "#fff", fontWeight: "500", marginLeft: 4 }}>Edit</Text>
             </TouchableOpacity>
@@ -230,23 +230,23 @@ export default function DriverProfile() {
               {profileImage ? (
                 <Image source={{ uri: profileImage }} style={{ width: 80, height: 80, borderRadius: 40 }} contentFit="cover" />
               ) : (
-                <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: "#2563EB", justifyContent: "center", alignItems: "center" }}>
+                <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: "#3b82f6", justifyContent: "center", alignItems: "center" }}>
                   <User size={32} color="#fff" />
                 </View>
               )}
-              <View style={{ position: "absolute", bottom: 0, right: 0, backgroundColor: "#fff", borderRadius: 12, padding: 6, borderWidth: 2, borderColor: "#2563EB" }}>
-                <Camera size={16} color="#2563EB" />
+              <View style={{ position: "absolute", bottom: 0, right: 0, backgroundColor: "#fff", borderRadius: 12, padding: 6, borderWidth: 2, borderColor: "#3b82f6" }}>
+                <Camera size={16} color="#3b82f6" />
               </View>
             </View>
           </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: "bold", color: "#111827", marginTop: 12 }}>{profile.name}</Text>
-          <Text style={{ fontSize: 14, color: "#6B7280", marginTop: 2 }}>School Van Driver</Text>
+          <Text style={{ fontSize: 18, fontWeight: "bold", color: "#0f172a", marginTop: 12 }}>{profile.name}</Text>
+          <Text style={{ fontSize: 14, color: "#64748b", marginTop: 2 }}>School Van Driver</Text>
         </View>
 
         {/* Personal Information */}
         <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-          <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#111827", marginBottom: 16 }}>Personal Information</Text>
+          <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 14, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#0f172a", marginBottom: 16 }}>Personal Information</Text>
             <ProfileField label="Full Name" value={profile.name} fieldKey="name" />
             <ProfileField label="Email Address" value={profile.email} fieldKey="email" keyboardType="email-address" editable={false} />
             <ProfileField label="Phone Number" value={profile.phone} fieldKey="phone" keyboardType="phone-pad" />
@@ -256,8 +256,8 @@ export default function DriverProfile() {
 
         {/* Vehicle Information */}
         <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-          <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#111827", marginBottom: 16 }}>Vehicle Information</Text>
+          <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 14, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#0f172a", marginBottom: 16 }}>Vehicle Information</Text>
             <ProfileField label="Van Model" value={profile.vanModel} fieldKey="vanModel" />
             <ProfileField label="License Plate" value={profile.vanPlate} fieldKey="vanPlate" />
             <ProfileField label="Driver's License Number" value={profile.licenseNumber} fieldKey="licenseNumber" />
@@ -266,14 +266,14 @@ export default function DriverProfile() {
 
         {/* Employment Information */}
         <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-          <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#111827", marginBottom: 16 }}>Employment Information</Text>
+          <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 14, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#0f172a", marginBottom: 16 }}>Employment Information</Text>
             <ProfileField label="Start Date" value={profile.startDate} fieldKey="startDate" editable={false} />
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6, fontWeight: "500" }}>Employment Status</Text>
+              <Text style={{ fontSize: 14, color: "#64748b", marginBottom: 6, fontWeight: "500" }}>Employment Status</Text>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isActive ? "#10B981" : "#9CA3AF", marginRight: 8 }} />
-                <Text style={{ fontSize: 16, color: "#111827" }}>{isActive ? "Active" : "Inactive"}</Text>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isActive ? "#10B981" : "#94a3b8", marginRight: 8 }} />
+                <Text style={{ fontSize: 16, color: "#0f172a" }}>{isActive ? "Active" : "Inactive"}</Text>
               </View>
             </View>
           </View>
@@ -281,8 +281,8 @@ export default function DriverProfile() {
 
         {/* Emergency Contact */}
         <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-          <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#111827", marginBottom: 16 }}>Emergency Contact</Text>
+          <View style={{ backgroundColor: "#fff", padding: 20, borderRadius: 14, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#0f172a", marginBottom: 16 }}>Emergency Contact</Text>
             <ProfileField label="Contact Name" value={profile.emergencyContact} fieldKey="emergencyContact" />
             <ProfileField label="Contact Phone" value={profile.emergencyPhone} fieldKey="emergencyPhone" keyboardType="phone-pad" />
           </View>
@@ -293,15 +293,15 @@ export default function DriverProfile() {
           {/* ── Settings button now navigates to DriverSettings ── */}
           <TouchableOpacity
             onPress={() => router.push("./DriverSettings")}
-            style={{ backgroundColor: "#fff", padding: 16, borderRadius: 12, alignItems: "center", borderWidth: 1, borderColor: "#E5E7EB", flexDirection: "row", justifyContent: "center", marginBottom: 12 }}
+            style={{ backgroundColor: "#fff", padding: 16, borderRadius: 14, alignItems: "center", borderWidth: 1, borderColor: "#e2e8f0", flexDirection: "row", justifyContent: "center", marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: {width:0,height:2}, shadowRadius: 10, elevation: 3 }}
           >
-            <Settings size={20} color="#6B7280" />
-            <Text style={{ fontSize: 16, color: "#6B7280", fontWeight: "500", marginLeft: 8 }}>App Settings</Text>
+            <Settings size={20} color="#64748b" />
+            <Text style={{ fontSize: 16, color: "#64748b", fontWeight: "500", marginLeft: 8 }}>App Settings</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={handleSignOut}
-            style={{ backgroundColor: "#fff", padding: 16, borderRadius: 12, alignItems: "center", borderWidth: 1, borderColor: "#FEE2E2", flexDirection: "row", justifyContent: "center" }}
+            style={{ backgroundColor: "#fff", padding: 16, borderRadius: 14, alignItems: "center", borderWidth: 1, borderColor: "#FEE2E2", flexDirection: "row", justifyContent: "center", shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: {width:0,height:2}, shadowRadius: 10, elevation: 3 }}
           >
             <LogOut size={20} color="#EF4444" />
             <Text style={{ fontSize: 16, color: "#EF4444", fontWeight: "500", marginLeft: 8 }}>Sign Out</Text>

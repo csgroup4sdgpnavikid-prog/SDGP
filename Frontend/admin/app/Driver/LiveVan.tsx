@@ -278,8 +278,8 @@ const styles = StyleSheet.create({
   statusBar: {
     position: "absolute",
     top: 16, left: 16, right: 16,
-    backgroundColor: "rgba(0,0,0,0.78)",
-    borderRadius: 12,
+    backgroundColor: "rgba(15,23,42,0.9)",
+    borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
     zIndex: 10,
@@ -330,14 +330,14 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   centerButton: {
-    backgroundColor: "#2563EB",
+    backgroundColor: "#3b82f6",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 24,
     elevation: 5,
   },
   updateButton: {
-    backgroundColor: "#16A34A",
+    backgroundColor: "#22c55e",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 24,

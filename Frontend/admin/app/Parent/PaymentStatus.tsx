@@ -80,7 +80,7 @@ export default function PaymentStatus() {
                 <Text style={styles.subtitle}>{formatMonth(month)}</Text>
 
                 {loading ? (
-                    <ActivityIndicator size="large" color="#5AA9E6" style={{ marginTop: 60 }} />
+                    <ActivityIndicator size="large" color="#3b82f6" style={{ marginTop: 60 }} />
                 ) : payment === null ? (
                     <View style={styles.card}>
                         <View style={[styles.statusBadge, styles.badgePending]}>
@@ -161,17 +161,22 @@ function DetailRow({
 }
 
 const styles = StyleSheet.create({
-    screen:       { flex: 1, backgroundColor: "#FFFFFF" },
+    screen:       { flex: 1, backgroundColor: "#f0f4f8" },
     backButton:   { padding: 16 },
     content:      { paddingHorizontal: 16, paddingBottom: 40 },
-    title:        { fontSize: 24, fontWeight: "800", color: "#111827", marginTop: 4 },
-    subtitle:     { fontSize: 15, color: "#6B7280", marginBottom: 24 },
+    title:        { fontSize: 24, fontWeight: "800", color: "#0f172a", marginTop: 4 },
+    subtitle:     { fontSize: 15, color: "#64748b", marginBottom: 24 },
     card: {
-        backgroundColor: "#F9FAFB",
-        borderRadius: 16,
+        backgroundColor: "#ffffff",
+        borderRadius: 14,
         padding: 20,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
+        borderColor: "#e2e8f0",
+        shadowColor: "#000",
+        shadowOpacity: 0.06,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 10,
+        elevation: 3,
     },
     statusBadge: {
         flexDirection: "row",
@@ -180,28 +185,28 @@ const styles = StyleSheet.create({
         gap: 10,
         paddingVertical: 16,
         paddingHorizontal: 20,
-        borderRadius: 12,
+        borderRadius: 14,
         marginBottom: 20,
     },
-    badgePaid:    { backgroundColor: "#DCFCE7" },
-    badgePending: { backgroundColor: "#FEF3C7" },
+    badgePaid:    { backgroundColor: "#dcfce7" },
+    badgePending: { backgroundColor: "#fef3c7" },
     statusText:   { fontSize: 18, fontWeight: "700" },
     amountRow:    { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-    amountLabel:  { fontSize: 15, color: "#6B7280" },
-    amountValue:  { fontSize: 22, fontWeight: "800", color: "#111827" },
-    divider:      { height: 1, backgroundColor: "#E5E7EB", marginBottom: 16 },
+    amountLabel:  { fontSize: 15, color: "#64748b" },
+    amountValue:  { fontSize: 22, fontWeight: "800", color: "#0f172a" },
+    divider:      { height: 1, backgroundColor: "#e2e8f0", marginBottom: 16 },
     detailRow:    { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
-    detailLabel:  { fontSize: 14, color: "#6B7280" },
-    detailValue:  { fontSize: 14, color: "#111827", fontWeight: "500", maxWidth: "60%", textAlign: "right" },
+    detailLabel:  { fontSize: 14, color: "#64748b" },
+    detailValue:  { fontSize: 14, color: "#0f172a", fontWeight: "500", maxWidth: "60%", textAlign: "right" },
     pendingNote: {
         marginTop: 16,
         fontSize: 13,
-        color: "#6B7280",
+        color: "#64748b",
         lineHeight: 20,
         textAlign: "center",
-        backgroundColor: "#FEF3C7",
+        backgroundColor: "#fef3c7",
         padding: 12,
         borderRadius: 10,
     },
-    info:         { fontSize: 14, color: "#6B7280", textAlign: "center", marginTop: 12 },
+    info:         { fontSize: 14, color: "#64748b", textAlign: "center", marginTop: 12 },
 });

@@ -122,7 +122,7 @@ export default function StudentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: '#f0f4f8',
   },
   header: {
     flexDirection: 'row',
@@ -134,15 +134,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
+    color: '#0f172a',
   },
   backButton: {
     padding: 5,
   },
   blueContent: {
     flex: 1,
-    backgroundColor: '#8ECAE6',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    backgroundColor: '#1e293b',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingHorizontal: 20,
   },
   summaryRow: {
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 10,
     paddingHorizontal: 14,
     gap: 8,
@@ -167,34 +168,41 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#374151',
+    color: '#334155',
   },
   searchSection: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
     alignItems: 'center',
     paddingHorizontal: 15,
     marginVertical: 16,
     height: 50,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   searchInput: {
     flex: 1,
     marginLeft: 10,
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 15,
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
     padding: 15,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 6,
+    elevation: 2,
   },
   avatarContainer: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#dbeafe',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -205,10 +213,11 @@ const styles = StyleSheet.create({
   nameText: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#0f172a',
   },
   idLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#64748b',
   },
   statusSection: {
     alignItems: 'flex-end',
@@ -218,7 +227,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 20,
     marginBottom: 5,
   },
   dot: {
@@ -234,7 +243,7 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     marginTop: 40,
-    color: '#6B7280',
+    color: '#94a3b8',
     fontSize: 15,
   },
 });

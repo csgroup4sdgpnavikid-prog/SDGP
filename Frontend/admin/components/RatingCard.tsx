@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   overallBadge: {
-    backgroundColor: "#5AA9E6",
+    backgroundColor: "#3b82f6",
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   overallBadgeGreen: {
-    backgroundColor: "#5AA9E6",
+    backgroundColor: "#3b82f6",
   },
   overallNumber: {
     fontSize: 18,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   overallMaxGreen: {
-    color: "#5AA9E6",
+    color: "#3b82f6",
   },
   comment: {
     marginTop: 10,

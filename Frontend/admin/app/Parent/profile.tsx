@@ -139,7 +139,7 @@ export default function ParentProfileCard() {
         {/*Parent Name*/}
         <Text style={styles.labelInput1}>Parent Name</Text>
         <View style={styles.inputBox1}>
-          <Ionicons name="person-outline" size={18} color="#6B7280" />
+          <Ionicons name="person-outline" size={18} color="#64748b" />
           <TextInput style={styles.input} value={name} onChangeText={setName} />
         </View>
       </View>
@@ -147,7 +147,7 @@ export default function ParentProfileCard() {
       {/* Email */}
       <Text style={styles.labelInput2}>Email</Text>
       <View style={styles.inputBox2}>
-        <Ionicons name="mail-outline" size={18} color="#6B7280" />
+        <Ionicons name="mail-outline" size={18} color="#64748b" />
         <TextInput
           style={styles.input}
           value={email}
@@ -158,7 +158,7 @@ export default function ParentProfileCard() {
       {/* Phone */}
       <Text style={styles.labelInput3}>Phone</Text>
       <View style={styles.inputBox3}>
-        <Ionicons name="call-outline" size={18} color="#6B7280" />
+        <Ionicons name="call-outline" size={18} color="#64748b" />
         <TextInput
           style={styles.input}
           value={phone}
@@ -180,10 +180,12 @@ export default function ParentProfileCard() {
           style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: "#F3F4F6",
-            borderRadius: 12,
+            backgroundColor: "#ffffff",
+            borderRadius: 14,
             paddingVertical: 14,
             paddingHorizontal: 16,
+            borderWidth: 1,
+            borderColor: "#e2e8f0",
           }}
           onPress={() => router.push("/Parent/Settings")}
         >
@@ -204,26 +206,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "flex-start",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#f0f4f8",
   },
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#f0f4f8",
   },
 
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#BCEAFB",
+    backgroundColor: "#0f172a",
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 14,
     marginHorizontal: 16,
     marginTop: 50,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   settingsButton: {
     position: "absolute",
@@ -240,7 +242,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#1e293b",
   },
 
   profilePlaceholder: {
@@ -252,7 +254,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 2,
     right: 2,
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#3b82f6",
     padding: 6,
     borderRadius: 20,
   },
@@ -263,14 +265,14 @@ const styles = StyleSheet.create({
 
   label: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "#94a3b8",
     marginBottom: 4,
   },
 
   name: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#111827",
+    color: "#ffffff",
   },
   detailsContainer: {
     marginTop: 30,
@@ -280,99 +282,110 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 6,
-    color: "#374151",
+    color: "#334155",
     marginLeft: 4,
   },
 
   inputBox1: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#ffffff",
     borderRadius: 10,
     paddingHorizontal: 10,
     height: 50,
     marginBottom: 20,
     marginLeft: 1,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   labelInput2: {
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 6,
-    color: "#374151",
+    color: "#334155",
     marginLeft: 20,
   },
 
   inputBox2: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#ffffff",
     borderRadius: 10,
     paddingHorizontal: 10,
     height: 50,
     marginBottom: 20,
     marginLeft: 16,
     marginRight: 15,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   labelInput3: {
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 6,
-    color: "#374151",
+    color: "#334155",
     marginLeft: 20,
   },
 
   inputBox3: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#ffffff",
     borderRadius: 10,
     paddingHorizontal: 10,
     height: 50,
     marginBottom: 20,
     marginLeft: 15,
     marginRight: 15,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   labelInput4: {
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 6,
-    color: "#374151",
+    color: "#334155",
     marginLeft: 20,
   },
 
   inputBox4: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#ffffff",
     borderRadius: 10,
     paddingHorizontal: 10,
     height: 50,
     marginBottom: 20,
     marginLeft: 15,
     marginRight: 15,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   labelInput5: {
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 6,
-    color: "#374151",
+    color: "#334155",
     marginLeft: 4,
   },
 
   inputBox5: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#ffffff",
     borderRadius: 10,
     paddingHorizontal: 10,
     height: 50,
     marginBottom: 20,
     marginLeft: 1,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   input: {
     flex: 1,
     marginLeft: 10,
     fontSize: 15,
+    color: "#0f172a",
   },
   passwordSection: {
     marginTop: 30,
@@ -384,31 +397,36 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 15,
-    color: "#111827",
+    color: "#0f172a",
   },
 
   confirmButton: {
-    backgroundColor: "#F4E285",
+    backgroundColor: "#3b82f6",
     height: 50,
-    borderRadius: 10,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 10,
+    shadowColor: "#3b82f6",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   confirmText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111827",
+    color: "#ffffff",
   },
   errorText: {
-    color: "#DC2626",
+    color: "#ef4444",
     marginBottom: 10,
     fontSize: 14,
   },
 
   successText: {
-    color: "#16A34A",
+    color: "#22c55e",
     marginBottom: 10,
     fontSize: 14,
   },
