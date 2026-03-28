@@ -1,17 +1,16 @@
 {
   "expo": {
-    "name": "admin",
+    "name": "NaviKid",
     "slug": "admin",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "admin",
+    "scheme": "navikid",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.admin",
+      "bundleIdentifier": "com.navikid.app",
       "googleServicesFile": "./GoogleService-Info.plist",
       "config": {
         "googleMapsApiKey": "AIzaSyAtbPYMF9ak5WZYcT5SMum9yFQ5O0Z83K8"
@@ -26,7 +25,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.admin",
+      "versionCode": 1,
+      "package": "com.navikid.app",
       "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
@@ -64,6 +64,7 @@
       "eas": {
         "projectId": "7c01cf21-d0c7-4d53-a992-5d74bfde98f2"
       }
-    }
+    },
+    "owner": "imethdewmina"
   }
 }
