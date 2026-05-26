@@ -9,11 +9,17 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://navikid-api-997311667098.asia-south1.run.app"
       }
     },
     "production": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://navikid-api-997311667098.asia-south1.run.app"
       }
     }
   },

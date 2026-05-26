@@ -40,7 +40,9 @@ jobs:
           source: ./backend
           region: asia-south1
           env_vars: |
+            NODE_ENV=production
             FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
             FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
             FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
             PORT=3001
+            ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
