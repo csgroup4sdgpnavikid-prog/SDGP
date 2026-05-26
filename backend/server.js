@@ -55,7 +55,7 @@ app.use(express.json({ limit: '50kb' })); // prevent oversized request bodies
 app.use(generalLimiter); // Apply general rate limit to all routes
 
 // ── Routes ───────────────────────────────────────────────────────────────────
-app.get('/', (req, res) => res.json({ status: 'ok', message: 'NaviKid API is running.' }));
+app.get('/', (req, res) => res.json({ status: 'ok', message: 'NaviKid API is running.', version: '1.0.1' }));
 app.use('/api', routes);
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
